@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#14532d">
+<link rel="manifest" href="manifest.json">
+<title>Kasir Bilyar</title>
+<style>
+:root{--bg:#f4f6f4;--card:#fff;--tx:#14201a;--mu:#5b6b62;--pr:#14532d;--ac:#c2410c;--bd:#d5ddd8;--ok:#15803d}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1511;--card:#17211b;--tx:#e8efe9;--mu:#93a398;--pr:#22c55e;--ac:#fb923c;--bd:#2a382f;--ok:#4ade80}}
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:20px}
+header{position:sticky;top:0;background:#14532d;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;z-index:5}
+header h1{font-size:17px;margin:0}header button{background:#ffffff22;color:#fff;border:0;border-radius:8px;padding:7px 10px;margin-left:6px}
+#grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}
+@media(min-width:700px){#grid{grid-template-columns:repeat(3,1fr)}}
+.t{background:var(--card);border:2px solid var(--bd);border-radius:14px;padding:12px;min-height:130px;cursor:pointer}
+.t.on{border-color:var(--ok)}.t.over{border-color:var(--ac);background:#c2410c18}
+.t b{font-size:16px}.t .st{font-size:12px;color:var(--mu);margin:4px 0}.t .tm{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.t .rp{color:var(--pr);font-weight:600;margin-top:4px}
+.ov{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:10}
+.ov.show{display:flex}.sh{background:var(--card);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px}
+h2{margin:0 0 10px;font-size:18px}h3{margin:14px 0 6px;font-size:14px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:9px 12px}
+button.p{background:var(--pr);color:#fff;border:0}button.d{color:var(--ac);border-color:var(--ac)}
+@media(prefers-color-scheme:dark){button.p{color:#06210f}}
+input,select{font:inherit;padding:9px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);width:100%}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}.row>*{flex:1}.row>.n{flex:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips button{flex:0 0 auto;font-size:13px}
+.it{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)}
+.sum div{display:flex;justify-content:space-between;padding:4px 0}.sum .g{font-size:20px;font-weight:700;border-top:2px solid var(--tx);margin-top:6px;padding-top:8px}
+.sm{font-size:12px;color:var(--mu)}label{font-size:12px;color:var(--mu)}
+</style></head><body>
+<header><h1>🎱 Kasir Bilyar</h1><div><button onclick="openRep()">Laporan</button><button onclick="openSet()">Pengaturan</button></div></header>
+<div id="grid"></div>
+<div class="ov" id="ov" onclick="if(event.target==this)closeM()"><div class="sh" id="sh"></div></div>
+<script>
+const K='kasirBilyarV1';
+const rp=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
+const def=()=>({tables:[1,2,3,4,5,6].map(i=>({id:i,name:'Meja '+i,on:false,start:0,mins:0,cust:'',orders:[]})),
+ menu:[['Air Mineral',5000],['Es Teh',8000],['Kopi',12000],['Kopi Susu',15000],['Mie Instan',15000],['Nasi Goreng',25000],['Kentang Goreng',18000],['Rokok',0]].map(x=>({n:x[0],p:x[1]})),
+ cfg:{rate:40000,taxS:10,taxF:10,pph:0.5},hist:[]});
+let S;try{S=JSON.parse(localStorage.getItem(K))||def()}catch(e){S=def()}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){alert('Gagal menyimpan data')}};
+const $=id=>document.getElementById(id);let cur=null;
+const sewa=t=>t.mins/60*S.cfg.rate;
+const fnb=t=>t.orders.reduce((a,o)=>a+o.p*o.q,0);
+const calc=t=>{const s=sewa(t),f=fnb(t),ts=s*S.cfg.taxS/100,tf=f*S.cfg.taxF/100;return{s,f,ts,tf,sub:s+f,tax:ts+tf,tot:s+f+ts+tf}};
+const fmt=ms=>{const neg=ms<0;ms=Math.abs(ms);const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60;return(neg?'-':'')+[h,m,c].map(x=>String(x).padStart(2,'0')).join(':')};
+const rem=t=>t.start+t.mins*60000-Date.now();
+const hm=ts=>new Date(ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+function render(){$('grid').innerHTML=S.tables.map(t=>{const r=t.on?rem(t):0,o=t.on&&r<0;
+ return`<div class="t ${t.on?'on':''} ${o?'over':''}" onclick="openT(${t.id})"><b>${t.name}</b>
+ <div class="st">${t.on?(o?'WAKTU HABIS':'Main')+' · mulai '+hm(t.start):'Kosong'}</div>
+ <div class="tm">${t.on?fmt(r):'—'}</div><div class="rp">${t.on?rp(calc(t).tot):''}</div></div>`}).join('')}
+setInterval(()=>{if(!$('ov').classList.contains('show')||!cur)render();else{render();const e=$('rem');if(e){const t=T();e.textContent=fmt(rem(t));}}},1000);
+const T=()=>S.tables.find(x=>x.id==cur);
+function closeM(){$('ov').classList.remove('show');cur=null;render()}
+function show(h){$('sh').innerHTML=h;$('ov').classList.add('show')}
+function openT(id){cur=id;drawT()}
+function drawT(){const t=T();
+ if(!t.on){const n=new Date(),v=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+ return show(`<h2>${t.name} — Mulai Main</h2>
+ <label>Nama pelanggan (opsional)</label><input id="cu" placeholder="mis. Budi">
+ <div class="row"><div><label>Jam mulai</label><input id="jm" type="time" value="${v}"></div>
+ <div><label>Durasi sewa (menit)</label><input id="du" type="number" value="60" min="1" step="15"></div></div>
+ <div class="sm">Tarif: ${rp(S.cfg.rate)}/jam · dihitung proporsional per menit</div>
+ <div class="row"><button onclick="closeM()">Batal</button><button class="p" onclick="startT()">Mulai</button></div>`)}
+ const c=calc(t);
+ show(`<h2>${t.name}${t.cust?' · '+t.cust:''}</h2>
+ <div class="sm">Mulai ${hm(t.start)} · durasi ${t.mins} menit · selesai ${hm(t.start+t.mins*60000)}</div>
+ <div class="tm" id="rem" style="font-size:34px;font-weight:700">${fmt(rem(t))}</div>
+ <h3>Tambah waktu sewa</h3><div class="chips"><button onclick="addM(15)">+15 mnt</button><button onclick="addM(30)">+30 mnt</button><button onclick="addM(60)">+1 jam</button><button onclick="addM(120)">+2 jam</button><button onclick="addM(prompt('Menit?'))">Lainnya…</button></div>
+ <h3>Tambah pesanan</h3><div class="chips">${S.menu.map((m,i)=>`<button onclick="addO(${i})">${m.n} · ${rp(m.p)}</button>`).join('')}<button onclick="addC()">+ Item lain</button></div>
+ <h3>Pesanan</h3>${t.orders.length?t.orders.map((o,i)=>`<div class="it"><span>${o.n}<br><span class="sm">${rp(o.p)} × ${o.q}</span></span><span><button onclick="qty(${i},-1)">−</button> ${o.q} <button onclick="qty(${i},1)">+</button> <b>${rp(o.p*o.q)}</b></span></div>`).join(''):'<div class="sm">Belum ada pesanan</div>'}
+ <h3>Total tagihan</h3><div class="sum">
+ <div><span>Sewa meja (${t.mins} mnt)</span><span>${rp(c.s)}</span></div>
+ <div><span>Makanan/minuman</span><span>${rp(c.f)}</span></div>
+ <div><span>Subtotal</span><span>${rp(c.sub)}</span></div>
+ <div><span>Pajak sewa ${S.cfg.taxS}% (PBJT hiburan)</span><span>${rp(c.ts)}</span></div>
+ <div><span>Pajak F&B ${S.cfg.taxF}% (PBJT makan-minum)</span><span>${rp(c.tf)}</span></div>
+ <div class="g"><span>TOTAL</span><span>${rp(c.tot)}</span></div></div>
+ <div class="row"><div><label>Uang diterima</label><input id="by" type="number" inputmode="numeric" oninput="kb()"></div><div><label>Kembalian</label><input id="kmb" readonly value="—"></div></div>
+ <div class="row"><button class="d" onclick="cancelT()">Batalkan</button><button onclick="closeM()">Tutup</button><button class="p" onclick="pay()">Bayar & Selesai</button></div>`)}
+function startT(){const t=T(),[h,m]=$('jm').value.split(':').map(Number),d=new Date();d.setHours(h,m,0,0);
+ const du=parseInt($('du').value);if(!(du>0))return alert('Durasi tidak valid');
+ Object.assign(t,{on:true,start:d.getTime(),mins:du,cust:$('cu').value.trim(),orders:[]});save();drawT()}
+function addM(m){m=parseInt(m);if(!(m>0))return;T().mins+=m;save();drawT()}
+function addO(i){const t=T(),m=S.menu[i];let o=t.orders.find(x=>x.n==m.n&&x.p==m.p);o?o.q++:t.orders.push({n:m.n,p:m.p,q:1});save();drawT()}
+function addC(){const n=prompt('Nama item?');if(!n)return;const p=parseInt(prompt('Harga (Rp)?'));if(!(p>=0))return;T().orders.push({n,p,q:1});save();drawT()}
+function qty(i,d){const t=T();t.orders[i].q+=d;if(t.orders[i].q<=0)t.orders.splice(i,1);save();drawT()}
+function kb(){const c=calc(T()).tot,v=parseFloat($('by').value)||0;$('kmb').value=v?(v>=c?rp(v-c):'Kurang '+rp(c-v)):'—'}
+function pay(){const t=T(),c=calc(t),v=parseFloat($('by').value)||0;
+ if(v&&v<c-0.5)return alert('Uang diterima kurang');
+ if(!confirm('Selesaikan pembayaran '+rp(c.tot)+'?'))return;
+ S.hist.push({ts:Date.now(),meja:t.name,cust:t.cust,start:t.start,mins:t.mins,orders:t.orders,...c,bayar:v||c.tot});
+ Object.assign(t,{on:false,start:0,mins:0,cust:'',orders:[]});save();closeM()}
+function cancelT(){if(!confirm('Batalkan sesi meja ini tanpa pembayaran?'))return;Object.assign(T(),{on:false,start:0,mins:0,cust:'',orders:[]});save();closeM()}
+function openSet(){const c=S.cfg;cur=null;show(`<h2>Pengaturan</h2>
+ <div class="row"><div><label>Tarif sewa per jam (Rp)</label><input id="s1" type="number" value="${c.rate}"></div></div>
+ <div class="row"><div><label>Pajak sewa meja (%)</label><input id="s2" type="number" step="0.1" value="${c.taxS}"></div><div><label>Pajak makan-minum (%)</label><input id="s3" type="number" step="0.1" value="${c.taxF}"></div></div>
+ <div class="sm">Pajak yang dipungut dari pelanggan = PBJT (pajak daerah), tarif ditetapkan Perda setempat, maksimal 10% menurut UU HKPD. Cocokkan dengan Perda daerah Anda; isi 0 jika belum dipungut.</div>
+ <div class="row"><div><label>PPh Final UMKM (% dari omzet, hanya estimasi laporan)</label><input id="s4" type="number" step="0.1" value="${c.pph}"></div></div>
+ <h3>Menu</h3><div id="ml">${S.menu.map((m,i)=>`<div class="row"><input value="${m.n}" onchange="S.menu[${i}].n=this.value"><input type="number" value="${m.p}" onchange="S.menu[${i}].p=+this.value"><button class="n d" onclick="S.menu.splice(${i},1);openSet()">✕</button></div>`).join('')}</div>
+ <button onclick="S.menu.push({n:'Item baru',p:0});openSet()">+ Tambah menu</button>
+ <h3>Nama meja</h3>${S.tables.map((t,i)=>`<div class="row"><input value="${t.name}" onchange="S.tables[${i}].name=this.value"></div>`).join('')}
+ <div class="row"><button class="d" onclick="if(confirm('Hapus SEMUA riwayat transaksi?')){S.hist=[];save();openSet()}">Hapus riwayat</button><button class="p" onclick="saveSet()">Simpan</button></div>`)}
+function saveSet(){const c=S.cfg;c.rate=+$('s1').value||0;c.taxS=+$('s2').value||0;c.taxF=+$('s3').value||0;c.pph=+$('s4').value||0;save();closeM()}
+function openRep(){cur=null;const d0=new Date();d0.setHours(0,0,0,0);const td=S.hist.filter(h=>h.ts>=d0.getTime());
+ const sum=a=>a.reduce((x,h)=>({s:x.s+h.s,f:x.f+h.f,tax:x.tax+h.tax,tot:x.tot+h.tot}),{s:0,f:0,tax:0,tot:0});
+ const m0=new Date(d0.getFullYear(),d0.getMonth(),1).getTime(),bl=S.hist.filter(h=>h.ts>=m0);
+ const blk=(j,a)=>{const x=sum(a);return`<h3>${j} (${a.length} transaksi)</h3><div class="sum"><div><span>Sewa meja</span><span>${rp(x.s)}</span></div><div><span>Makanan/minuman</span><span>${rp(x.f)}</span></div><div><span>Omzet sebelum pajak</span><span>${rp(x.s+x.f)}</span></div><div><span>PBJT dipungut (setor ke Pemda)</span><span>${rp(x.tax)}</span></div><div class="g"><span>Total diterima</span><span>${rp(x.tot)}</span></div><div><span>Estimasi PPh Final ${S.cfg.pph}% × omzet</span><span>${rp((x.s+x.f)*S.cfg.pph/100)}</span></div></div>`};
+ show(`<h2>Laporan</h2>${blk('Hari ini',td)}${blk('Bulan ini',bl)}
+ <div class="sm">Omzet untuk dasar PPh Final dihitung sebelum PBJT (PBJT bukan penghasilan usaha). Estimasi ini bukan pengganti perhitungan resmi/konsultasi pajak.</div>
+ <h3>Transaksi hari ini</h3>${td.slice().reverse().map(h=>`<div class="it"><span>${h.meja} · ${hm(h.ts)}${h.cust?' · '+h.cust:''}</span><b>${rp(h.tot)}</b></div>`).join('')||'<div class="sm">Belum ada</div>'}
+ <div class="row"><button onclick="exp()">Ekspor CSV</button><button class="p" onclick="closeM()">Tutup</button></div>`)}
+function exp(){const r=[['Waktu','Meja','Pelanggan','Menit','Sewa','FnB','PBJT','Total']].concat(S.hist.map(h=>[new Date(h.ts).toLocaleString('id-ID'),h.meja,h.cust,h.mins,h.s,h.f,h.tax,h.tot]));
+ const b=new Blob([r.map(x=>x.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n')],{type:'text/csv'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='riwayat-kasir.csv';a.click()}
+render();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
