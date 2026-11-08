@@ -37,13 +37,14 @@ details{border:1px solid var(--bd);border-radius:12px;margin:8px 0}
 summary{padding:11px 12px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;gap:8px;list-style:none}
 summary::-webkit-details-marker{display:none}summary::after{content:'▾';color:var(--mu)}details[open]>summary::after{content:'▴'}
 details>.in{padding:0 12px 12px}
+#ts{position:fixed;left:12px;right:12px;bottom:16px;z-index:30;background:#111;color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;display:none;box-shadow:0 6px 20px #0006}
 #al{position:fixed;left:0;right:0;top:0;z-index:20;padding:8px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
 .al{pointer-events:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;font-weight:600;color:#fff;background:#b45309;border-radius:12px;box-shadow:0 6px 20px #0006}.al.end{background:#b91c1c}.al button{background:#fff;color:#111;border:0}
 @media(max-height:500px){header{padding:6px 12px}#grid{gap:8px;padding:8px}.t{min-height:0;padding:8px}.t .tm{font-size:22px}.sh{padding:12px}}
 @media(orientation:landscape){.sh{max-width:720px}}
 </style></head><body>
-<header><h1>🎱 Kasir Bilyar <small style="opacity:.65;font-size:11px">v8</small></h1><div><button onclick="openRes()">Reservasi</button><button onclick="openRep()">Laporan</button><button onclick="openSet()">Pengaturan</button></div></header>
-<div id="grid"></div><div id="al"></div>
+<header><h1>🎱 Kasir Bilyar <small style="opacity:.65;font-size:11px">v9</small></h1><div><button onclick="openRes()">Reservasi</button><button onclick="openRep()">Laporan</button><button onclick="openSet()">Pengaturan</button></div></header>
+<div id="grid"></div><div id="al"></div><div id="ts"></div>
 <div class="ov" id="ov" onclick="if(event.target==this)closeM()"><div class="sh" id="sh"></div></div>
 <div class="ov" id="ov2" style="z-index:15"><div class="sh" id="sh2" style="max-width:360px"></div></div>
 <script>
@@ -58,14 +59,16 @@ const dtl=ms=>(dstr(ms)==dstr(Date.now())?'':new Date(ms).toLocaleDateString('id
 const fmt=ms=>{const n=ms<0,s=Math.floor(Math.abs(ms)/1000);return(n?'-':'')+[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(p2).join(':')};
 const fmtD=m=>{const h=Math.floor(m/60),x=Math.round(m%60);return(h?h+' jam':'')+(h&&x?' ':'')+(x?x+' menit':'')||'0 menit'};
 const MSG='Tidak ada tarif yang berlaku untuk sebagian waktu sewa. Aktifkan tarif sewa tetap atau atur jam promo di Pengaturan.';
-const def=()=>({tables:[1,2,3,4,5,6].map(i=>({id:i,name:'Meja '+i})),menu:[['Air Mineral',5000,'min'],['Es Teh',8000,'min'],['Kopi',12000,'min'],['Kopi Susu',15000,'min'],['Mie Instan',15000,'mak'],['Nasi Goreng',25000,'mak'],['Kentang Goreng',18000,'mak'],['Rokok',0,'lain']].map(x=>({n:x[0],p:x[1],c:x[2]})),cfg:{},hist:[],res:[]});
+const FOREST=[['Bubuk Minuman Forest: Cappuccino',23000],['Bubuk Minuman Forest: Vanilla Coffee',25000],['Bubuk Minuman Forest: Caramel Coffee',25000],['Bubuk Minuman Forest: Hazelnut Coffee',25000],['Bubuk Minuman Forest: Chocolate',24000],['Bubuk Minuman Forest: Royal Chocolate',28500],['Bubuk Minuman Forest: Taro',22500],['Bubuk Minuman Forest: Strawberry',24500],['Bubuk Minuman Forest: Avocado',25000],['Bubuk Minuman Forest: Red Velvet',23500],['Bubuk Minuman Forest: Matcha Green Tea',23000],['Bubuk Minuman Forest: Lemon Tea',23000]].map(x=>({n:x[0],p:x[1],c:'min'}));
+const OLDM='Air Mineral,Es Teh,Kopi,Kopi Susu,Mie Instan,Nasi Goreng,Kentang Goreng,Rokok';
+const def=()=>({tables:[1,2,3,4,5,6].map(i=>({id:i,name:'Meja '+i})),menu:FOREST.map(m=>({...m})),cfg:{},hist:[],res:[]});
 const CFG={rate:40000,fixOn:true,rnd:true,taxS:10,taxF:10,taxSOn:true,taxFOn:true,pph:.5,pphOn:true,remOn:true,remMin:10,endOn:true,sndOn:true,vibOn:true,vol:80,wake:true,pin:'',orient:'auto',biz:'Kasir Bilyar',bizNote:''};
 let S;try{S=JSON.parse(localStorage.getItem(K))||def()}catch(e){S=def()}
 {const c0=S.cfg||{};S.cfg=Object.assign({},CFG,c0);S.cfg.promos=c0.promos||[];S.cfg.disc=c0.disc||[];S.hist=S.hist||[];S.res=(S.res||[]).filter(r=>r.ts>Date.now()-864e5);S.menu=S.menu||[];
  S.tables.forEach(t=>{if(t.mins===undefined){t.mins=Math.round((t.hrs||0)*60);delete t.hrs}Object.assign(t,{on:!!t.on,start:t.start||0,cust:t.cust||'',phone:t.phone||'',orders:t.orders||[],stage:t.stage||[]})});
  S.menu.forEach(m=>{if(!m.c)m.c=/teh|kopi|air|es |jus|susu|minum|soda/i.test(m.n)?'min':/mie|nasi|goreng|roti|snack|ayam|makan|kentang/i.test(m.n)?'mak':'lain'});
  S.cfg.promos.forEach(p=>{if(p.harga===undefined){p.harga=+p.tarif||0;p.dur=1}});
- S.hist.forEach(h=>{if(h.ts<1e12&&h.start)h.ts=h.start+(h.mins!=null?h.mins:(h.hrs||0)*60)*60000});S.cfg.ver=4}
+ S.hist.forEach(h=>{if(h.ts<1e12&&h.start)h.ts=h.start+(h.mins!=null?h.mins:(h.hrs||0)*60)*60000});if(S.cfg.menuV!=5){if(S.menu.map(m=>m.n).join()==OLDM)S.menu=FOREST.map(m=>({...m}));S.cfg.menuV=5}S.cfg.ver=5}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){alert('Gagal menyimpan data')}};
 let cur=null,PRE=null,RES=null,PINCB=null,built=false,AL=[],AC=null,lastBeep=0,lastWake=0,WL=null;
 const T=()=>S.tables.find(x=>x.id==cur),hmins=h=>h.mins!=null?h.mins:(h.hrs||0)*60;
@@ -128,6 +131,7 @@ function tick(){const now=Date.now(),th=S.cfg.remMin*60000;let ch=false;
  if(now-lastWake>10000){lastWake=now;wake()}}
 setInterval(tick,500);
 /* ===== Modal ===== */
+let TS=0;function toast(m,ms){const e=$('ts');e.textContent=m;e.style.display='block';clearTimeout(TS);TS=setTimeout(()=>{e.style.display='none'},ms||3500)}
 const tg=(id,o)=>{o?OPEN.add(id):OPEN.delete(id)};
 const dt=(id,title,body)=>`<details ${OPEN.has(id)?'open':''} ontoggle="tg('${id}',this.open)"><summary>${title}</summary><div class="in">${body}</div></details>`;
 function show(h){$('sh').innerHTML=h;$('ov').classList.add('show')}
@@ -170,8 +174,7 @@ function drawT(){const t=T();if(!t.on)return formStart(t,PRE);const c=calc(t),ca
  ${S.cfg.taxSOn?`<div><span>Pajak sewa ${S.cfg.taxS}% (PBJT hiburan)</span><span>${rp(c.pS)}</span></div>`:''}
  ${S.cfg.taxFOn?`<div><span>Pajak F&B ${S.cfg.taxF}% (PBJT makan-minum)</span><span>${rp(c.pF)}</span></div>`:''}
  <div class="g"><span>TOTAL</span><span>${rp(c.tot)}</span></div></div>
- <div class="row"><div><label>Uang diterima</label><input id="by" type="number" inputmode="numeric" oninput="kb()"></div><div><label>Kembalian</label><input id="kmb" readonly value="—"></div></div>
- <div class="row"><button class="d" onclick="cancelT()">Batalkan</button><button onclick="printT()">Cetak Tagihan</button><button onclick="closeM()">Tutup</button><button class="p" onclick="pay()">Bayar & Selesai</button></div>`)}
+ <div class="row"><button class="d" onclick="cancelT()">Batalkan</button><button onclick="printT()">Cetak Tagihan</button><button onclick="closeM()">Tutup</button><button class="p" onclick="payDlg()">Bayar</button></div>`)}
 function addH(h){h=parseFloat(String(h).replace(',','.'));if(!(h>0))return;const t=T(),old=t.mins;t.mins+=Math.round(h*60);if(sewaCalc(t.start,t.mins).miss){t.mins=old;return alert(MSG)}save();drawT()}
 function stg(i){const t=T(),m=S.menu[i],o=t.stage.find(x=>x.n==m.n&&x.p==m.p);o?o.q++:t.stage.push({n:m.n,p:m.p,q:1});save();drawT()}
 function stgC(){const n=prompt('Nama item?');if(!n)return;const p=parseInt(prompt('Harga (Rp)?'));if(!(p>=0))return;T().stage.push({n,p,q:1});save();drawT()}
@@ -182,11 +185,15 @@ function cfS(){const t=T();if(!confirm('Konfirmasi tambahan pesanan kepada pelan
 function qty(i,d){const t=T(),o=t.orders[i],n=o.q+d;if(!confirm(n<=0?`Hapus "${o.n}" dari pesanan?`:`Ubah jumlah "${o.n}" dari ${o.q} menjadi ${n}?`))return;o.q=n;if(n<=0)t.orders.splice(i,1);save();drawT()}
 function kb(){const c=calc(T()).tot,v=parseFloat($('by').value)||0;$('kmb').value=v?(v>=c?rp(v-c):'Kurang '+rp(c-v)):'—'}
 const reset=t=>Object.assign(t,{on:false,start:0,mins:0,cust:'',phone:'',orders:[],stage:[],f10:false,f0:false});
+function payDlg(){const t=T(),c=calc(t);if(c.miss)return alert(MSG);
+ $('sh2').innerHTML=`<h2>Pembayaran</h2><div class="sum"><div class="g"><span>TOTAL</span><span>${rp(c.tot)}</span></div></div>
+ <label>Uang diterima</label><input id="by" type="number" inputmode="numeric" oninput="kb()" autocomplete="off"><div class="sm" style="margin-bottom:6px">Kosongkan bila uang pas.</div>
+ <label>Kembalian</label><input id="kmb" readonly value="—">
+ <div class="row"><button onclick="closeP()">Cancel</button><button class="p" onclick="pay()">Selesai</button></div>`;$('ov2').classList.add('show');setTimeout(()=>{const e=$('by');if(e)e.focus()},60)}
 function pay(){const t=T(),c=calc(t),v=parseFloat($('by').value)||0;if(c.miss)return alert(MSG);if(v&&v<c.tot)return alert('Uang diterima kurang');
  if(t.stage.length&&!confirm('Masih ada pesanan tambahan yang belum dikonfirmasi dan tidak ikut ditagih. Lanjutkan?'))return;
- if(!confirm('Selesaikan pembayaran '+rp(c.tot)+'?'))return;
  S.hist.push({ts:Date.now(),meja:t.name,cust:t.cust,phone:t.phone,start:t.start,mins:t.mins,orders:t.orders,lines:c.lines,s:c.s,f:c.f,ds:c.ds,df:c.df,pS:c.pS,pF:c.pF,tax:c.tax,sub:c.sub,tot:c.tot,bayar:v||c.tot});
- reset(t);save();closeM()}
+ reset(t);save();closeP();closeM()}
 function cancelT(){ask('Batalkan sesi '+T().name+' tanpa pembayaran?',()=>{reset(T());save();closeM()})}
 /* ===== QR Code (byte, ECC L, versi 1-5; offline) ===== */
 function qr(text){const b=[...new TextEncoder().encode(text)],DC=[0,19,34,55,80,108],EC=[0,7,10,15,20,26];let v=1;while(v<=5&&b.length>DC[v]-2)v++;if(v>5)return null;
@@ -275,6 +282,7 @@ const addD=()=>{S.cfg.disc.push({n:'Diskon Hari Raya',on:true,from:'',to:'',pct:
 const delD=i=>{S.cfg.disc.splice(i,1);save();openSet()};
 const addM=k=>{S.menu.push({n:'Item baru',p:0,c:k});save();openSet()};
 const delM=i=>{S.menu.splice(i,1);save();openSet()};
+const loadF=()=>{if(confirm('Ganti SELURUH daftar menu dengan 12 menu Forest? Menu yang ada sekarang akan dihapus.')){S.menu=FOREST.map(m=>({...m}));save();openSet()}};
 const clrH=()=>{if(confirm('Hapus SEMUA riwayat transaksi?')){S.hist=[];save();openSet()}};
 function openSet(){cur=null;const c=S.cfg;
  const menu=[['mak','Makanan'],['min','Minuman'],['lain','Lain-lain']].map(([k,l])=>dt('s6'+k,l+' ('+S.menu.filter(m=>m.c==k).length+')',S.menu.map((m,i)=>m.c==k?`<div class="row">${I('menu.'+i+'.n',m.n)}${I('menu.'+i+'.p',m.p,'n','style="max-width:110px"')}<button class="n d" onclick="delM(${i})">✕</button></div>`:'').join('')+`<button onclick="addM('${k}')">+ Tambah ${l.toLowerCase()}</button>`)).join('');
@@ -289,7 +297,7 @@ function openSet(){cur=null;const c=S.cfg;
  ${dt('s5','Diskon hari raya / tanggal tertentu ('+c.disc.length+')','<div class="sm">Diskon (%) otomatis berlaku bila tanggal mulai main ada di rentang tanggal. Dikurangkan sebelum pajak. Bila beberapa cocok, dipakai persen tertinggi (tidak ditumpuk).</div>'+c.disc.map((x,i)=>`<div class="bx"><div class="row">${I('cfg.disc.'+i+'.n',x.n,'s','placeholder="Nama (mis. Idul Fitri)"')}${CK('cfg.disc.'+i+'.on',x.on,'Aktif')}<button class="n d" onclick="delD(${i})">✕</button></div>
  <div class="row"><div><label>Dari tanggal</label>${I('cfg.disc.'+i+'.from',x.from||'','s','type="date"')}</div><div><label>Sampai tanggal</label>${I('cfg.disc.'+i+'.to',x.to||'','s','type="date"')}</div></div>
  <div class="row"><div><label>Diskon (%)</label>${I('cfg.disc.'+i+'.pct',x.pct,'n')}</div><div><label>Berlaku untuk</label>${SEL('cfg.disc.'+i+'.scope',x.scope||'all',[['all','Sewa + F&B'],['sewa','Sewa saja'],['fnb','F&B saja']])}</div></div></div>`).join('')+'<button onclick="addD()">+ Tambah diskon</button>')}
- ${dt('s6','Menu',menu)}
+ ${dt('s6','Menu',menu+'<button onclick="loadF()">Muat menu Forest (12 item)</button>')}
  ${dt('s7','Nama meja',S.tables.map((t,i)=>`<div class="row">${I('tables.'+i+'.name',t.name)}</div>`).join(''))}
  ${dt('s9','Tagihan (struk JPG)',`<label>Nama usaha</label>${I('cfg.biz',c.biz)}<label>Alamat / telepon / catatan kaki (opsional)</label>${I('cfg.bizNote',c.bizNote)}`)}
  ${dt('s8','Keamanan & tampilan',`<label>Kode konfirmasi pembatalan pesanan (kosongkan = konfirmasi biasa)</label>${I('cfg.pin',c.pin,'s','type="password" inputmode="numeric" autocomplete="off"')}<label>Orientasi layar</label>${SEL('cfg.orient',c.orient,[['auto','Otomatis (portrait & landscape)'],['portrait','Portrait'],['landscape','Landscape']])}<div class="sm">Pengunci orientasi bekerja saat aplikasi dipasang ke layar utama (layar penuh) atau sebagai APK. Kode konfirmasi hanya mencegah pembatalan tidak sengaja, bukan pengaman data.</div><button class="d" onclick="clrH()">Hapus riwayat transaksi</button>`)}
@@ -301,9 +309,9 @@ function repD(v){RP.v=v.length==7?v+'-01':v;openRep()}
 function rangeR(){const d=new Date(RP.v+'T00:00:00'),y=d.getFullYear(),m=d.getMonth(),dd=d.getDate();
  if(RP.tab=='d')return[d,new Date(y,m,dd+1)];if(RP.tab=='w'){const k=(d.getDay()+6)%7;return[new Date(y,m,dd-k),new Date(y,m,dd-k+7)]}return[new Date(y,m,1),new Date(y,m+1,1)]}
 const sumR=a=>a.reduce((x,h)=>({n:x.n+1,s:x.s+h.s,f:x.f+h.f,d:x.d+(h.ds||0)+(h.df||0),tax:x.tax+h.tax,tot:x.tot+h.tot}),{n:0,s:0,f:0,d:0,tax:0,tot:0});
-function custRep(arr){const m={};arr.forEach(h=>{const k=(h.phone||h.cust||'').toLowerCase().trim();if(!k)return;const o=m[k]||(m[k]={n:h.cust||h.phone,ph:'',v:0,tot:0,menu:{},hr:{},dur:0,pk:0,pv:0});
+function custRep(arr,all){const m={};arr.forEach(h=>{const k=(h.phone||h.cust||'').toLowerCase().trim();if(!k)return;const o=m[k]||(m[k]={n:h.cust||h.phone,ph:'',v:0,tot:0,menu:{},hr:{},dur:0,pk:0,pv:0});
  o.v++;o.tot+=h.tot;if(h.cust)o.n=h.cust;if(h.phone)o.ph=h.phone;(h.orders||[]).forEach(x=>o.menu[x.n]=(o.menu[x.n]||0)+x.q);const hr=new Date(h.start).getHours();o.hr[hr]=(o.hr[hr]||0)+1;o.dur+=hmins(h);
- if(h.lines){o.pk++;if(h.lines.some(l=>l.n))o.pv++}});return Object.values(m).sort((a,b)=>b.v-a.v||b.tot-a.tot).slice(0,5)}
+ if(h.lines){o.pk++;if(h.lines.some(l=>l.n))o.pv++}});const v=Object.values(m).sort((a,b)=>b.v-a.v||b.tot-a.tot);return all?v:v.slice(0,5)}
 function openRep(tab){cur=null;if(tab)RP.tab=tab;const tb=RP.tab,mo=tb=='m'||tb=='c',[a,b]=rangeR(),arr=S.hist.filter(h=>h.ts>=a&&h.ts<b),L=d=>d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
  let body='';
  if(tb=='c'){const top=custRep(arr);body=top.length?top.map((o,i)=>{const mn=Object.entries(o.menu).sort((x,y)=>y[1]-x[1]).slice(0,3).map(x=>x[0]+' ×'+x[1]).join(', ')||'—',h=Object.entries(o.hr).sort((x,y)=>y[1]-x[1])[0];
@@ -318,7 +326,66 @@ function openRep(tab){cur=null;if(tab)RP.tab=tab;const tb=RP.tab,mo=tb=='m'||tb=
  show(`<h2>Laporan</h2><div class="chips" style="margin-bottom:8px">${[['d','Harian'],['w','Mingguan'],['m','Bulanan'],['c','Pelanggan']].map(([k,l])=>`<button class="${tb==k?'p':''}" onclick="openRep('${k}')">${l}</button>`).join('')}</div>
  <div class="row"><input type="${mo?'month':'date'}" value="${mo?RP.v.slice(0,7):RP.v}" onchange="repD(this.value)"></div>
  <div class="sm">${tb=='w'?L(a)+' – '+L(new Date(b-864e5)):tb=='d'?L(a):a.toLocaleDateString('id-ID',{month:'long',year:'numeric'})}${tb=='c'?' · Top 5 pelanggan paling sering datang':''}</div>${body}
+ <div class="row"><button onclick="savePDF()">Save Data</button><button class="d" onclick="clrR()">Clear Data</button></div>
  <div class="row"><button onclick="exp()">Ekspor CSV</button><button class="p" onclick="closeM()">Tutup</button></div>`)}
+/* ===== Save Data (PDF) & Clear Data ===== */
+const L1=s=>String(s==null?'':s).replace(/[–—−]/g,'-').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/[^\x20-\xff]/g,'');
+const tw=(s,z)=>{let w=0;for(const ch of L1(s))w+=/[ .,:;|!il'()\/]/.test(ch)?.278:/[fjrt-]/.test(ch)?.333:/[mwMW]/.test(ch)?.85:/[A-Z]/.test(ch)?.68:.556;return w*z};
+function wrapT(s,z,mw){const o=[];let c='';L1(s).split(' ').forEach(w=>{const n=c?c+' '+w:w;if(tw(n,z)>mw&&c){o.push(c);c=w}else c=n});if(c)o.push(c);return o}
+function pdfBuild(items){const W=595,H=842,M=40,pg=[''],esc=s=>L1(s).replace(/([\\()])/g,'\\$1');let y=H-M,n=0;
+ const tx=(s,x,yy,z,b,c)=>{pg[n]+=`BT /F${b?2:1} ${z} Tf ${c||'0 g'} ${x.toFixed(1)} ${yy.toFixed(1)} Td (${esc(s)}) Tj ET\n`};
+ const need=h=>{if(y-h<M+16){pg.push('');n++;y=H-M}};
+ items.forEach(it=>{if(it.k=='s'){y-=it.h;return}
+  if(it.k=='l'){need(8);y-=4;pg[n]+=`0.7 G 0.5 w ${M} ${y} m ${W-M} ${y} l S\n`;y-=4;return}
+  const z=it.z||9,lh=z*1.4;
+  if(it.k=='r'){need(lh);y-=lh;it.c.forEach(c=>{const s=L1(c.t);tx(s,c.r!=null?c.r-tw(s,z):c.x,y,z,it.b,it.col)});return}
+  const x=it.x||M;wrapT(it.t,z,W-M-x).forEach(l=>{need(lh);y-=lh;tx(l,x,y,z,it.b,it.col)})});
+ const N=pg.length;pg.forEach((c,i)=>{n=i;tx('Halaman '+(i+1)+' / '+N,W/2-30,24,8,0,'0.4 g')});
+ const ob=[];const add=o=>ob.push(o);add('<</Type/Catalog/Pages 2 0 R>>');add('');add('<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>');add('<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>');
+ const kids=[];pg.forEach(c=>{add(`<</Length ${c.length}>>\nstream\n${c}endstream`);const ci=ob.length;add(`<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${W} ${H}]/Resources<</Font<</F1 3 0 R/F2 4 0 R>>>>/Contents ${ci} 0 R>>`);kids.push(ob.length+' 0 R')});
+ ob[1]=`<</Type/Pages/Kids[${kids.join(' ')}]/Count ${kids.length}>>`;
+ let out='%PDF-1.4\n';const off=[];ob.forEach((o,i)=>{off.push(out.length);out+=`${i+1} 0 obj\n${o}\nendobj\n`});const x0=out.length;
+ out+=`xref\n0 ${ob.length+1}\n0000000000 65535 f \n`+off.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+`trailer\n<</Size ${ob.length+1}/Root 1 0 R>>\nstartxref\n${x0}\n%%EOF`;
+ return Uint8Array.from(out,c=>c.charCodeAt(0))}
+const LD=d=>d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+function perT(){const tb=RP.tab,[a,b]=rangeR();return tb=='w'?LD(a)+' - '+LD(new Date(b-864e5)):tb=='d'?LD(a):a.toLocaleDateString('id-ID',{month:'long',year:'numeric'})}
+const TBN={d:'Harian',w:'Mingguan',m:'Bulanan',c:'Pelanggan'};
+function repPDF(){const tb=RP.tab,[a,b]=rangeR(),arr=S.hist.filter(h=>h.ts>=a&&h.ts<b),per=perT(),I=[],G='0.4 g',E=555,M=40;
+ const P=(t,o)=>I.push(Object.assign({k:'p',t},o)),R=(c,o)=>I.push(Object.assign({k:'r',c},o)),SP=h=>I.push({k:'s',h}),LN=()=>I.push({k:'l'});
+ P(S.cfg.biz||'Kasir Bilyar',{z:16,b:1});P('Laporan '+TBN[tb]+' - '+per,{z:12,b:1});P('Dicetak: '+new Date().toLocaleString('id-ID'),{z:8,col:G});SP(4);LN();
+ if(tb=='c'){const all=custRep(arr,1);P('TOP 5 PELANGGAN PALING SERING DATANG',{b:1,z:10});SP(2);
+  all.slice(0,5).forEach((o,i)=>{const mn=Object.entries(o.menu).sort((x,y)=>y[1]-x[1]).slice(0,3).map(x=>x[0]+' x'+x[1]).join(', ')||'-',h=Object.entries(o.hr).sort((x,y)=>y[1]-x[1])[0];
+   P((i+1)+'. '+o.n+(o.ph?' - '+o.ph:''),{b:1,z:10});P(o.v+' kunjungan, total '+rp(o.tot),{x:52});P('Menu sering dipesan: '+mn,{x:52});
+   P('Biasa mulai main sekitar '+p2(h[0])+'.00 ('+h[1]+' dari '+o.v+' kunjungan), rata-rata durasi '+fmtD(Math.round(o.dur/o.v)),{x:52});
+   if(o.pk&&o.pv/o.pk>=.5)P('Catatan: sering menyewa di jam promo ('+o.pv+' dari '+o.pk+' kunjungan)',{x:52,b:1});SP(4)});
+  if(!all.length)P('Belum ada data pelanggan pada bulan ini.');
+  LN();P('SELURUH PELANGGAN BULAN INI',{b:1,z:10});R([{t:'Nama',x:M},{t:'No HP',x:230},{t:'Kunjungan',r:430},{t:'Total',r:E}],{b:1});
+  all.forEach(o=>R([{t:o.n.slice(0,30),x:M},{t:o.ph||'-',x:230},{t:String(o.v),r:430},{t:rp(o.tot),r:E}]))}
+ else{const x=sumR(arr);P('RINGKASAN',{b:1,z:10});
+  [['Jumlah transaksi',x.n],['Sewa meja',rp(x.s)],['Makanan/minuman',rp(x.f)],['Diskon',x.d?'-'+rp(x.d):rp(0)],['Omzet bersih sebelum pajak',rp(x.s+x.f-x.d)],['PBJT dipungut (setor ke Pemda)',rp(x.tax)]].forEach(r=>R([{t:r[0],x:M},{t:String(r[1]),r:E}]));
+  R([{t:'Total diterima',x:M},{t:rp(x.tot),r:E}],{b:1});if(S.cfg.pphOn)R([{t:'Estimasi PPh Final '+S.cfg.pph+'% x omzet',x:M},{t:rp((x.s+x.f-x.d)*S.cfg.pph/100),r:E}]);SP(4);LN();
+  if(tb!='d'){const days={};arr.forEach(h=>{const k=dstr(h.ts);(days[k]=days[k]||[]).push(h)});P('PER HARI',{b:1,z:10});
+   Object.keys(days).sort().forEach(k=>{const y=sumR(days[k]);R([{t:LD(new Date(k+'T00:00:00')),x:M},{t:y.n+' transaksi',x:230},{t:rp(y.tot),r:E}])});if(!arr.length)P('Belum ada data.');SP(4);LN()}
+  P('TRANSAKSI',{b:1,z:10});R([{t:'Tgl/Jam',x:M},{t:'Meja',x:100},{t:'Pelanggan',x:142},{t:'Sewa',r:320},{t:'F&B',r:375},{t:'Diskon',r:430},{t:'Pajak',r:485},{t:'Total',r:E}],{b:1,z:8.5});
+  arr.slice().sort((a,b)=>a.ts-b.ts).forEach(h=>{const d=new Date(h.ts);R([{t:p2(d.getDate())+'/'+p2(d.getMonth()+1)+' '+hm(h.ts),x:M},{t:h.meja,x:100},{t:(h.cust||'-').slice(0,22),x:142},{t:rp(h.s),r:320},{t:rp(h.f),r:375},{t:rp((h.ds||0)+(h.df||0)),r:430},{t:rp(h.tax),r:485},{t:rp(h.tot),r:E}],{z:8.5});
+   const ss=(h.lines||[]).map(l=>(l.n||'Normal')+(l.from?' '+hm(l.from)+'-'+hm(l.to):'')+' ('+fmtD(l.m!=null?l.m:(l.h||0)*60)+')');
+   if(ss.length||h.mins!=null||h.hrs)P('Sewa '+fmtD(hmins(h))+(ss.length?': '+ss.join('; '):''),{z:7.5,col:G,x:142});
+   if((h.orders||[]).length)P('Pesanan: '+h.orders.map(o=>o.q+'x '+o.n).join(', '),{z:7.5,col:G,x:142})});
+  if(!arr.length)P('Belum ada transaksi.')}
+ return{bytes:pdfBuild(I),name:'Laporan-'+TBN[tb]+'-'+per.replace(/[^\w]+/g,'-')+'.pdf'}}
+async function saveFile(u8,name){const C=window.Capacitor,FS=C&&C.Plugins&&C.Plugins.Filesystem;
+ if(FS){try{let b='';for(let i=0;i<u8.length;i+=8192)b+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));await FS.writeFile({path:'KasirBilyar/'+name,data:btoa(b),directory:'DOCUMENTS',recursive:true});toast('Tersimpan di Documents/KasirBilyar/'+name,6000);return}catch(e){}}
+ const bl=new Blob([u8],{type:'application/pdf'});
+ if(window.showSaveFilePicker){try{const h=await showSaveFilePicker({suggestedName:name,startIn:'documents',types:[{description:'PDF',accept:{'application/pdf':['.pdf']}}]});const w=await h.createWritable();await w.write(bl);await w.close();toast('Tersimpan: '+h.name,5000);return}catch(e){if(e&&e.name=='AbortError')return}}
+ const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=name;a.click();
+ toast('File "'+name+'" diunduh ke folder Unduhan/Downloads. Pindahkan ke Documents lewat aplikasi File, atau aktifkan "Tanyakan lokasi penyimpanan" di pengaturan unduhan browser.',9000)}
+function savePDF(){const r=repPDF();saveFile(r.bytes,r.name)}
+function clrR(){const tb=RP.tab,[a,b]=rangeR(),arr=S.hist.filter(h=>h.ts>=a&&h.ts<b),per=perT();
+ if(!arr.length)return alert('Tidak ada data pada periode ini');
+ if(tb=='c'){const w=arr.filter(h=>h.cust||h.phone);if(!w.length)return alert('Tidak ada data pelanggan pada bulan ini');
+  if(!confirm('CLEAR DATA PELANGGAN\n\nNama dan No HP pada '+w.length+' transaksi ('+per+') akan dihapus. Omzet dan transaksi tetap tersimpan.\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?'))return;w.forEach(h=>{h.cust='';h.phone=''})}
+ else{if(!confirm('CLEAR DATA '+TBN[tb].toUpperCase()+'\n\n'+arr.length+' transaksi ('+per+') akan dihapus permanen.\nDisarankan menekan Save Data (PDF) terlebih dahulu.\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?'))return;S.hist=S.hist.filter(h=>!(h.ts>=a&&h.ts<b))}
+ save();openRep();toast('Data dibersihkan',2500)}
 function exp(){const r=[['Waktu','Meja','Pelanggan','No HP','Menit','Sewa','FnB','Diskon','PBJT','Total']].concat(S.hist.map(h=>[new Date(h.ts).toLocaleString('id-ID'),h.meja,h.cust,h.phone||'',hmins(h),h.s,h.f,(h.ds||0)+(h.df||0),h.tax,h.tot]));
  const bl=new Blob([r.map(x=>x.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='riwayat-kasir.csv';a.click()}
 render();applyOrient();
