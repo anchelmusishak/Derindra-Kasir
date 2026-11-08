@@ -43,10 +43,11 @@ details>.in{padding:0 12px 12px}
 @media(max-height:500px){header{padding:6px 12px}#grid{gap:8px;padding:8px}.t{min-height:0;padding:8px}.t .tm{font-size:22px}.sh{padding:12px}}
 @media(orientation:landscape){.sh{max-width:720px}}
 </style></head><body>
-<header><h1>🎱 Kasir Bilyar <small style="opacity:.65;font-size:11px">v9</small></h1><div><button onclick="openRes()">Reservasi</button><button onclick="openRep()">Laporan</button><button onclick="openSet()">Pengaturan</button></div></header>
+<header><h1>🎱 Kasir Bilyar <small style="opacity:.65;font-size:11px">v10</small></h1><div><button onclick="openRes()">Reservasi</button><button onclick="openRep()">Laporan</button><button onclick="openSet()">Pengaturan</button></div></header>
 <div id="grid"></div><div id="al"></div><div id="ts"></div>
 <div class="ov" id="ov" onclick="if(event.target==this)closeM()"><div class="sh" id="sh"></div></div>
 <div class="ov" id="ov2" style="z-index:15"><div class="sh" id="sh2" style="max-width:360px"></div></div>
+<div class="ov" id="ov3" style="z-index:18"><div class="sh" id="sh3" style="max-width:420px"></div></div>
 <script>
 const K='kasirBilyarV1',$=id=>document.getElementById(id),OPEN=new Set();
 const rp=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
@@ -58,17 +59,18 @@ const hm=ms=>new Date(ms).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-d
 const dtl=ms=>(dstr(ms)==dstr(Date.now())?'':new Date(ms).toLocaleDateString('id-ID',{day:'numeric',month:'short'})+' ')+hm(ms);
 const fmt=ms=>{const n=ms<0,s=Math.floor(Math.abs(ms)/1000);return(n?'-':'')+[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(p2).join(':')};
 const fmtD=m=>{const h=Math.floor(m/60),x=Math.round(m%60);return(h?h+' jam':'')+(h&&x?' ':'')+(x?x+' menit':'')||'0 menit'};
-const MSG='Tidak ada tarif yang berlaku untuk sebagian waktu sewa. Aktifkan tarif sewa tetap atau atur jam promo di Pengaturan.';
-const FOREST=[['Bubuk Minuman Forest: Cappuccino',23000],['Bubuk Minuman Forest: Vanilla Coffee',25000],['Bubuk Minuman Forest: Caramel Coffee',25000],['Bubuk Minuman Forest: Hazelnut Coffee',25000],['Bubuk Minuman Forest: Chocolate',24000],['Bubuk Minuman Forest: Royal Chocolate',28500],['Bubuk Minuman Forest: Taro',22500],['Bubuk Minuman Forest: Strawberry',24500],['Bubuk Minuman Forest: Avocado',25000],['Bubuk Minuman Forest: Red Velvet',23500],['Bubuk Minuman Forest: Matcha Green Tea',23000],['Bubuk Minuman Forest: Lemon Tea',23000]].map(x=>({n:x[0],p:x[1],c:'min'}));
+const MSG='Tidak ada tarif yang berlaku untuk sebagian waktu sewa. Atur Tarif sewa normal (jam paket) atau promo di Pengaturan.';
+const FOREST=[['Cappuccino',23000],['Vanilla Coffee',25000],['Caramel Coffee',25000],['Hazelnut Coffee',25000],['Chocolate',24000],['Royal Chocolate',28500],['Taro',22500],['Strawberry',24500],['Avocado',25000],['Red Velvet',23500],['Matcha Green Tea',23000],['Lemon Tea',23000]].map(x=>({n:x[0],p:x[1],c:'min'}));
+const TARIF=()=>[{n:'Paket Siang',on:true,dari:'13:00',sampai:'18:00',wd:50000,we:60000},{n:'Paket Malam',on:true,dari:'18:00',sampai:'23:00',wd:60000,we:75000}];
 const OLDM='Air Mineral,Es Teh,Kopi,Kopi Susu,Mie Instan,Nasi Goreng,Kentang Goreng,Rokok';
 const def=()=>({tables:[1,2,3,4,5,6].map(i=>({id:i,name:'Meja '+i})),menu:FOREST.map(m=>({...m})),cfg:{},hist:[],res:[]});
-const CFG={rate:40000,fixOn:true,rnd:true,taxS:10,taxF:10,taxSOn:true,taxFOn:true,pph:.5,pphOn:true,remOn:true,remMin:10,endOn:true,sndOn:true,vibOn:true,vol:80,wake:true,pin:'',orient:'auto',biz:'Kasir Bilyar',bizNote:''};
+const CFG={rate:40000,fixOn:true,rnd:true,taxS:10,taxF:10,taxSOn:true,taxFOn:true,pph:.5,pphOn:true,remOn:true,remMin:10,endOn:true,sndOn:true,vibOn:true,vol:80,wake:true,pin:'',orient:'auto',biz:'DERINDRA BILYARD',bizNote:'',sc:5,scOn:true,scScope:'all',scBase:true};
 let S;try{S=JSON.parse(localStorage.getItem(K))||def()}catch(e){S=def()}
-{const c0=S.cfg||{};S.cfg=Object.assign({},CFG,c0);S.cfg.promos=c0.promos||[];S.cfg.disc=c0.disc||[];S.hist=S.hist||[];S.res=(S.res||[]).filter(r=>r.ts>Date.now()-864e5);S.menu=S.menu||[];
- S.tables.forEach(t=>{if(t.mins===undefined){t.mins=Math.round((t.hrs||0)*60);delete t.hrs}Object.assign(t,{on:!!t.on,start:t.start||0,cust:t.cust||'',phone:t.phone||'',orders:t.orders||[],stage:t.stage||[]})});
+{const c0=S.cfg||{};S.cfg=Object.assign({},CFG,c0);S.cfg.promos=c0.promos||[];S.cfg.tarif=c0.tarif||TARIF();S.cfg.disc=c0.disc||[];S.hist=S.hist||[];S.res=(S.res||[]).filter(r=>r.ts>Date.now()-864e5);S.menu=S.menu||[];
+ S.tables.forEach(t=>{if(t.mins===undefined){t.mins=Math.round((t.hrs||0)*60);delete t.hrs}Object.assign(t,{on:!!t.on,start:t.start||0,cust:t.cust||'',phone:t.phone||'',orders:t.orders||[],stage:t.stage||[],pays:t.pays||[]})});
  S.menu.forEach(m=>{if(!m.c)m.c=/teh|kopi|air|es |jus|susu|minum|soda/i.test(m.n)?'min':/mie|nasi|goreng|roti|snack|ayam|makan|kentang/i.test(m.n)?'mak':'lain'});
  S.cfg.promos.forEach(p=>{if(p.harga===undefined){p.harga=+p.tarif||0;p.dur=1}});
- S.hist.forEach(h=>{if(h.ts<1e12&&h.start)h.ts=h.start+(h.mins!=null?h.mins:(h.hrs||0)*60)*60000});if(S.cfg.menuV!=5){if(S.menu.map(m=>m.n).join()==OLDM)S.menu=FOREST.map(m=>({...m}));S.cfg.menuV=5}S.cfg.ver=5}
+ S.hist.forEach(h=>{if(h.ts<1e12&&h.start)h.ts=h.start+(h.mins!=null?h.mins:(h.hrs||0)*60)*60000});if(S.cfg.menuV!=5){if(S.menu.map(m=>m.n).join()==OLDM)S.menu=FOREST.map(m=>({...m}));S.cfg.menuV=5}if(S.cfg.bizV!=1){S.cfg.biz='DERINDRA BILYARD';S.cfg.bizV=1}S.menu.forEach(m=>{m.n=String(m.n).replace(/^Bubuk Minuman Forest:\s*/,'')});S.cfg.ver=6}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){alert('Gagal menyimpan data')}};
 let cur=null,PRE=null,RES=null,PINCB=null,built=false,AL=[],AC=null,lastBeep=0,lastWake=0,WL=null;
 const T=()=>S.tables.find(x=>x.id==cur),hmins=h=>h.mins!=null?h.mins:(h.hrs||0)*60;
@@ -77,19 +79,22 @@ const rem=t=>t.start+t.mins*60000-Date.now(),fnb=t=>t.orders.reduce((a,o)=>a+o.p
 const toM=v=>{if(!v)return null;const a=v.split(':').map(Number);return a[0]*60+a[1]};
 const inW=(p,m)=>{const a=toM(p.dari),b=toM(p.sampai);if(a==null||b==null||a==b)return true;return a<b?(m>=a&&m<b):(m>=a||m<b)};
 const pr=p=>(+p.dur>0?+p.harga/+p.dur:+p.harga)||0;
-function rateAt(ts,H){const c=S.cfg,d=new Date(ts),m=d.getHours()*60+d.getMinutes();let b=c.fixOn?{rate:+c.rate,n:''}:null;
- for(const p of c.promos)if(p.on&&H>=(+p.min||0)&&inW(p,m)&&(!b||pr(p)<b.rate))b={rate:pr(p),n:p.n};return b}
-function sewaCalc(start,mins){const H=mins/60,g=[];let raw=0,miss=0,last=null;
- for(let i=0;i<mins;i++){const ts=start+i*60000,b=rateAt(ts,H);if(!b){miss++;last=null;continue}raw+=b.rate/60;
-  if(last&&last.n==b.n&&last.rate==b.rate){last.m++;last.to=ts+60000}else{last={n:b.n,rate:b.rate,m:1,from:ts,to:ts+60000};g.push(last)}}
+function rateAt(ts){const c=S.cfg,d=new Date(ts),m=d.getHours()*60+d.getMinutes(),we=d.getDay()%6==0;let b=null;
+ for(const x of c.tarif)if(x.on&&inW(x,m)){const r=+(we?x.we:x.wd);if(!b||r<b.rate)b={rate:r,n:x.n+(we?' (Weekend)':' (Weekday)'),pm:0}}
+ for(const p of c.promos)if(p.on&&H0>=(+p.min||0)&&inW(p,m)&&(!b||pr(p)<b.rate))b={rate:pr(p),n:p.n,pm:1};return b}
+let H0=0;
+function sewaCalc(start,mins){H0=mins/60;const g=[];let raw=0,miss=0,last=null;
+ for(let i=0;i<mins;i++){const ts=start+i*60000,b=rateAt(ts);if(!b){miss++;last=null;continue}raw+=b.rate/60;
+  if(last&&last.n==b.n&&last.rate==b.rate){last.m++;last.to=ts+60000}else{last={n:b.n,rate:b.rate,pm:b.pm,m:1,from:ts,to:ts+60000};g.push(last)}}
  return{g,raw,miss}}
 function discOf(t){let b={pct:0,n:'',scope:'all'};const d=dstr(t.start);
  for(const x of S.cfg.disc){if(!x.on||!x.from||!x.to||d<x.from||d>x.to)continue;const q=+x.pct||0;if(q>b.pct)b={pct:q,n:x.n,scope:x.scope||'all'}}return b}
-const calc=t=>{const w=sewaCalc(t.start,t.mins),d=discOf(t),c=S.cfg,f=fnb(t),tS=c.taxSOn?+c.taxS:0,tF=c.taxFOn?+c.taxF:0,
+const calc=t=>{const w=sewaCalc(t.start,t.mins),d=discOf(t),c=S.cfg,f=fnb(t),tS=c.taxSOn?+c.taxS:0,tF=c.taxFOn?+c.taxF:0,sp=c.scOn?+c.sc:0,
  r=Math.round(w.raw),s=c.rnd?Math.round(r/1000)*1000:r,
  ds=d.scope=='fnb'?0:Math.round(s*d.pct/100),df=d.scope=='sewa'?0:Math.round(f*d.pct/100),
- pS=Math.round((s-ds)*tS/100),pF=Math.round((f-df)*tF/100);
- return{s,f,ds,df,pS,pF,lines:w.g,raw:w.raw,miss:w.miss,dn:d.n,dp:d.pct,sub:s+f-ds-df,tax:pS+pF,tot:s+f-ds-df+pS+pF}};
+ scS=c.scScope=='fnb'?0:Math.round((s-ds)*sp/100),scF=c.scScope=='sewa'?0:Math.round((f-df)*sp/100),bs=c.scBase!==false,
+ pS=Math.round((s-ds+(bs?scS:0))*tS/100),pF=Math.round((f-df+(bs?scF:0))*tF/100),sc=scS+scF;
+ return{s,f,ds,df,sc,pS,pF,lines:w.g,raw:w.raw,miss:w.miss,dn:d.n,dp:d.pct,sub:s+f-ds-df,tax:pS+pF,tot:s+f-ds-df+sc+pS+pF}};
 function segHTML(w){const r=Math.round(w.raw),s=S.cfg.rnd?Math.round(r/1000)*1000:r;
  return'<div class="sum">'+(w.g||w.lines).map(x=>`<div><span>${esc(x.n||'Tarif normal')}<br><span class="sm">${hm(x.from)}–${hm(x.to)} · ${fmtD(x.m)} × ${rp(x.rate)}/jam</span></span><span>${rp(x.m*x.rate/60)}</span></div>`).join('')
  +(w.miss?`<div style="color:#dc2626"><span>⚠ ${fmtD(w.miss)} tanpa tarif berlaku</span><span></span></div>`:'')
@@ -103,7 +108,7 @@ function render(){if(!built)return build();const ph=Math.floor(Date.now()/1000)%
   e.className='t'+(t.on?' on':'')+(rv?' rv':'')+(red?(ph?' r1':' r2'):'');
   ch[0].textContent=t.name;ch[1].textContent=t.on?(t.cust||'—'):'';
   ch[2].textContent=t.on?'Mulai '+hm(t.start)+' · Selesai '+hm(t.start+t.mins*60000):(rv?'📅 '+dtl(rv.ts)+' · '+rv.name:'Kosong');
-  ch[3].textContent=t.on?(ov?'⏰ ':'')+fmt(r):'—';ch[4].textContent=t.on?rp(calc(t).tot):''})}
+  ch[3].textContent=t.on?(ov?'⏰ ':'')+fmt(r):'—';{const pd=t.on?paidOf(t):0;ch[4].textContent=!t.on?'':pd>0?'✔ Sudah melakukan pembayaran'+(calc(t).tot-pd>0?' · tambahan '+rp(calc(t).tot-pd):''):rp(calc(t).tot)}})}
 /* ===== Alarm & pengingat ===== */
 function unlock(){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume()}catch(e){}}
 ['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,unlock,{passive:true}));
@@ -143,23 +148,27 @@ function custs(){const m={};[...S.hist,...S.res].forEach(h=>{const n=(h.cust||h.
 function fillPh(a,b){const n=$(a).value.trim().toLowerCase(),c=custs().find(x=>x.name.toLowerCase()==n);if(c&&c.phone&&!$(b).value)$(b).value=c.phone}
 const dl=()=>`<datalist id="dl">${custs().map(c=>`<option value="${esc(c.name)}">`).join('')}</datalist>`;
 function openT(id){cur=id;drawT()}
-function formStart(t,pre){pre=pre||{};const n=Date.now();
+function formStart(t,pre){pre=pre||{};const n=Date.now();PMS.x='Tunai';
  show(`<h2>${esc(t.name)} — Mulai Main</h2>
  <label>Nama pelanggan</label><input id="cu" list="dl" value="${esc(pre.name)}" placeholder="mis. Budi" onchange="fillPh('cu','ph')">${dl()}
  <label>No HP</label><input id="ph" type="tel" inputmode="tel" value="${esc(pre.phone)}" placeholder="08xxxxxxxxxx">
  <div class="row"><div><label>Tanggal</label><input id="jd" type="date" value="${dstr(n)}" oninput="prevS()"></div><div><label>Jam mulai</label><input id="jm" type="time" value="${tstr(n)}" oninput="prevS()"></div><button class="n" onclick="nowT()">Sekarang</button></div>
  <div class="row"><div><label>Durasi sewa (jam, boleh 0,5)</label><input id="du" type="number" min="0.5" max="24" step="0.5" value="${pre.hrs||1}" oninput="prevS()"></div></div>
  <h3>Simulasi biaya sewa</h3><div id="pv"></div>
+ <label class="ck"><input type="checkbox" id="pp" onchange="ppDraw()"> Bayar di awal</label><div id="ppb"></div>
  <div class="row"><button onclick="closeM()">Batal</button><button onclick="resForm(${t.id})">Reservasi</button><button class="p" onclick="startT()">Mulai</button></div>`);prevS()}
 function nowT(){const n=Date.now();$('jd').value=dstr(n);$('jm').value=tstr(n);prevS()}
 const readS=()=>({st:new Date($('jd').value+'T'+$('jm').value).getTime(),hr:parseFloat(String($('du').value).replace(',','.'))});
 function prevS(){const e=$('pv');if(!e)return;const{st,hr}=readS();if(!st||!(hr>0)){e.textContent='';return}
- const mins=Math.round(hr*60);e.innerHTML=`<div class="sm" style="margin-bottom:4px">${hm(st)} – ${hm(st+mins*60000)} (${fmtD(mins)})</div>`+segHTML(sewaCalc(st,mins))}
+ const mins=Math.round(hr*60);e.innerHTML=`<div class="sm" style="margin-bottom:4px">${hm(st)} – ${hm(st+mins*60000)} (${fmtD(mins)})</div>`+segHTML(sewaCalc(st,mins));const pt=$('pptot');if(pt){pt.textContent=rp(calc({start:st,mins,orders:[]}).tot);kb('x')}}
 function startT(){const t=T(),{st,hr}=readS();if(!st||!(hr>=0.5&&hr<=24))return alert('Isi tanggal, jam mulai, dan durasi (0,5–24 jam) dengan benar');
  const mins=Math.round(hr*60);if(sewaCalc(st,mins).miss)return alert(MSG);
- Object.assign(t,{on:true,start:st,mins,cust:$('cu').value.trim(),phone:$('ph').value.trim(),orders:[],stage:[],f10:false,f0:false});
+ let pays=[];if($('pp')&&$('pp').checked){const tt=calc({start:st,mins,orders:[]}).tot;if(PMS.x=='Tunai'){const cash=num($('xby').value);if(cash&&cash<tt)return alert('Uang diterima kurang')}pays=[{ts:Date.now(),m:PMS.x,a:tt,early:1}]}
+ Object.assign(t,{pays,on:true,start:st,mins,cust:$('cu').value.trim(),phone:$('ph').value.trim(),orders:[],stage:[],f10:false,f0:false});
  if(RES){S.res=S.res.filter(r=>r.id!=RES);RES=null}PRE=null;save();drawT()}
-function drawT(){const t=T();if(!t.on)return formStart(t,PRE);const c=calc(t),cat=[['mak','Makanan'],['min','Minuman'],['lain','Lain-lain']],sg=t.stage.reduce((a,o)=>a+o.p*o.q,0);
+function drawT(){const t=T();if(!t.on)return formStart(t,PRE);const c=calc(t),cat=[['mak','Makanan'],['min','Minuman'],['lain','Lain-lain']],sg=t.stage.reduce((a,o)=>a+o.p*o.q,0),pd=paidOf(t),due=c.tot-pd,sw=dt('sw','<span>Sewa meja — rincian per sesi</span><b>'+rp(c.s)+'</b>',segHTML(c)),
+ rows=`<div class="sum"><div><span>Makanan/minuman</span><span>${rp(c.f)}</span></div>${c.ds+c.df?`<div><span>Diskon ${esc(c.dn)} (${c.dp}%)</span><span>−${rp(c.ds+c.df)}</span></div>`:''}<div><span>Subtotal (sewa + F&B${c.ds+c.df?', setelah diskon':''})</span><span>${rp(c.sub)}</span></div>${c.sc?`<div><span>Service Charge ${S.cfg.sc}%</span><span>${rp(c.sc)}</span></div>`:''}${S.cfg.taxSOn?`<div><span>PBJT ${S.cfg.taxS}% (sewa)</span><span>${rp(c.pS)}</span></div>`:''}${S.cfg.taxFOn?`<div><span>Pajak Makanan-Minuman ${S.cfg.taxF}%</span><span>${rp(c.pF)}</span></div>`:''}<div class="g"><span>TOTAL</span><span>${rp(c.tot)}</span></div></div>`,
+ tail=pd?dt('full','<span>Rincian total keseluruhan</span><b>'+rp(c.tot)+'</b>',sw+rows)+`<div class="sum"><div><span>Total keseluruhan</span><span>${rp(c.tot)}</span></div><div><span>Sudah dibayar di awal (${t.pays.map(x=>PML[x.m]||x.m).join(' + ')})</span><span>−${rp(pd)}</span></div><div class="g"><span>TAGIHAN TAMBAHAN (belum dibayar)</span><span>${rp(Math.max(0,due))}</span></div></div>`:sw+rows;
  show(`<h2>${esc(t.name)}${t.cust?' · '+esc(t.cust):''}</h2>
  <div class="sm">${t.phone?'📞 '+esc(t.phone)+' · ':''}Mulai ${hm(t.start)} · durasi ${fmtD(t.mins)} · selesai ${hm(t.start+t.mins*60000)}</div>
  <div class="tm" id="rem" style="font-size:34px;font-weight:700;font-variant-numeric:tabular-nums">${fmt(rem(t))}</div>
@@ -167,14 +176,8 @@ function drawT(){const t=T();if(!t.on)return formStart(t,PRE);const c=calc(t),ca
  <h3>Tambah pesanan</h3>${cat.map(([k,l])=>dt('m'+k,l,`<div class="chips">${S.menu.map((m,i)=>m.c==k?`<button onclick="stg(${i})">${esc(m.n)} · ${rp(m.p)}</button>`:'').join('')}${k=='lain'?'<button onclick="stgC()">+ Item lain</button>':''}</div>`)).join('')}
  ${t.stage.length?`<div class="bx stg"><b>Pesanan tambahan — menunggu konfirmasi</b>${t.stage.map((o,i)=>`<div class="it"><span>${esc(o.n)}<br><span class="sm">${rp(o.p)} × ${o.q}</span></span><span><button onclick="sq(${i},-1)">−</button> ${o.q} <button onclick="sq(${i},1)">+</button></span></div>`).join('')}<div class="row"><button onclick="clrS()">Kosongkan</button><button class="p" onclick="cfS()">Konfirmasi (${rp(sg)})</button></div></div>`:''}
  <h3>Pesanan</h3>${t.orders.length?t.orders.map((o,i)=>`<div class="it"><span>${esc(o.n)}<br><span class="sm">${rp(o.p)} × ${o.q}</span></span><span><button onclick="qty(${i},-1)">−</button> ${o.q} <button onclick="qty(${i},1)">+</button> <b>${rp(o.p*o.q)}</b></span></div>`).join(''):'<div class="sm">Belum ada pesanan</div>'}
- <h3>Total tagihan</h3>${dt('sw','<span>Sewa meja — rincian per sesi</span><b>'+rp(c.s)+'</b>',segHTML(c))}
- <div class="sum"><div><span>Makanan/minuman</span><span>${rp(c.f)}</span></div>
- ${c.ds+c.df?`<div><span>Diskon ${esc(c.dn)} (${c.dp}%)</span><span>−${rp(c.ds+c.df)}</span></div>`:''}
- <div><span>Subtotal (sewa + F&B${c.ds+c.df?', setelah diskon':''})</span><span>${rp(c.sub)}</span></div>
- ${S.cfg.taxSOn?`<div><span>Pajak sewa ${S.cfg.taxS}% (PBJT hiburan)</span><span>${rp(c.pS)}</span></div>`:''}
- ${S.cfg.taxFOn?`<div><span>Pajak F&B ${S.cfg.taxF}% (PBJT makan-minum)</span><span>${rp(c.pF)}</span></div>`:''}
- <div class="g"><span>TOTAL</span><span>${rp(c.tot)}</span></div></div>
- <div class="row"><button class="d" onclick="cancelT()">Batalkan</button><button onclick="printT()">Cetak Tagihan</button><button onclick="closeM()">Tutup</button><button class="p" onclick="payDlg()">Bayar</button></div>`)}
+ <h3>Total tagihan</h3>${tail}
+ <div class="row"><button class="d" onclick="cancelT()">Batalkan</button><button onclick="closeM()">Tutup</button><button class="p" onclick="payDlg()">Bayar</button></div>`)}
 function addH(h){h=parseFloat(String(h).replace(',','.'));if(!(h>0))return;const t=T(),old=t.mins;t.mins+=Math.round(h*60);if(sewaCalc(t.start,t.mins).miss){t.mins=old;return alert(MSG)}save();drawT()}
 function stg(i){const t=T(),m=S.menu[i],o=t.stage.find(x=>x.n==m.n&&x.p==m.p);o?o.q++:t.stage.push({n:m.n,p:m.p,q:1});save();drawT()}
 function stgC(){const n=prompt('Nama item?');if(!n)return;const p=parseInt(prompt('Harga (Rp)?'));if(!(p>=0))return;T().stage.push({n,p,q:1});save();drawT()}
@@ -183,18 +186,28 @@ function clrS(){T().stage=[];save();drawT()}
 function cfS(){const t=T();if(!confirm('Konfirmasi tambahan pesanan kepada pelanggan?\n\n'+t.stage.map(o=>o.q+'× '+o.n+' — '+rp(o.p*o.q)).join('\n')+'\n\nTotal tambahan: '+rp(t.stage.reduce((a,o)=>a+o.p*o.q,0))))return;
  t.stage.forEach(o=>{const x=t.orders.find(y=>y.n==o.n&&y.p==o.p);x?x.q+=o.q:t.orders.push({n:o.n,p:o.p,q:o.q})});t.stage=[];save();drawT()}
 function qty(i,d){const t=T(),o=t.orders[i],n=o.q+d;if(!confirm(n<=0?`Hapus "${o.n}" dari pesanan?`:`Ubah jumlah "${o.n}" dari ${o.q} menjadi ${n}?`))return;o.q=n;if(n<=0)t.orders.splice(i,1);save();drawT()}
-function kb(){const c=calc(T()).tot,v=parseFloat($('by').value)||0;$('kmb').value=v?(v>=c?rp(v-c):'Kurang '+rp(c-v)):'—'}
-const reset=t=>Object.assign(t,{on:false,start:0,mins:0,cust:'',phone:'',orders:[],stage:[],f10:false,f0:false});
-function payDlg(){const t=T(),c=calc(t);if(c.miss)return alert(MSG);
- $('sh2').innerHTML=`<h2>Pembayaran</h2><div class="sum"><div class="g"><span>TOTAL</span><span>${rp(c.tot)}</span></div></div>
- <label>Uang diterima</label><input id="by" type="number" inputmode="numeric" oninput="kb()" autocomplete="off"><div class="sm" style="margin-bottom:6px">Kosongkan bila uang pas.</div>
- <label>Kembalian</label><input id="kmb" readonly value="—">
- <div class="row"><button onclick="closeP()">Cancel</button><button class="p" onclick="pay()">Selesai</button></div>`;$('ov2').classList.add('show');setTimeout(()=>{const e=$('by');if(e)e.focus()},60)}
-function pay(){const t=T(),c=calc(t),v=parseFloat($('by').value)||0;if(c.miss)return alert(MSG);if(v&&v<c.tot)return alert('Uang diterima kurang');
+const reset=t=>Object.assign(t,{on:false,start:0,mins:0,cust:'',phone:'',orders:[],stage:[],pays:[],f10:false,f0:false});
+const paidOf=t=>(t.pays||[]).reduce((a,p)=>a+p.a,0),dueOf=t=>calc(t).tot-paidOf(t),num=v=>parseInt(String(v||'').replace(/\D/g,''))||0;
+const PMS={x:'Tunai',y:'Tunai'},PML={Tunai:'Tunai',QRIS:'QRIS',KARTU:'Kartu'};
+function payBox(px,meth){return`<div class="chips" style="margin:8px 0">${[['Tunai','Tunai'],['QRIS','Bayar via QRIS'],['KARTU','Bayar via KARTU']].map(([k,l])=>`<button class="${meth==k?'p':''}" onclick="setPM('${px}','${k}')">${l}</button>`).join('')}</div>`+
+ (meth=='Tunai'?`<label>Uang diterima</label><input id="${px}by" type="text" inputmode="numeric" oninput="fm('${px}')" autocomplete="off" placeholder="0"><div class="sm" style="margin-bottom:6px">Kosongkan bila uang pas.</div><label>Kembalian</label><input id="${px}kmb" readonly value="—">`:`<div class="bx">Pembayaran via ${meth=='QRIS'?'QRIS':'KARTU'} dinyatakan sah dan dapat langsung diselesaikan.</div>`)}
+function setPM(px,k){PMS[px]=k;px=='y'?payDlg():ppDraw()}
+function fm(px){const e=$(px+'by'),d=e.value.replace(/\D/g,'');e.value=d?(+d).toLocaleString('id-ID'):'';kb(px)}
+function kb(px){const k=$(px+'kmb');if(!k)return;let due;if(px=='x'){const{st,hr}=readS();due=st&&hr>0?calc({start:st,mins:Math.round(hr*60),orders:[]}).tot:0}else due=dueOf(T());
+ const v=num($(px+'by').value);k.value=v?(v>=due?rp(v-due):'Kurang '+rp(due-v)):'—'}
+function ppDraw(){const b=$('ppb');if(!b)return;if(!$('pp').checked){b.innerHTML='';return}
+ b.innerHTML=`<div class="bx"><div class="sum"><div class="g"><span>Dibayar di awal</span><span id="pptot">—</span></div></div>${payBox('x',PMS.x)}</div>`;prevS()}
+function payDlg(){const t=T(),c=calc(t);if(c.miss)return alert(MSG);const pd=paidOf(t),due=c.tot-pd;
+ $('sh2').innerHTML=`<h2>Pembayaran</h2><div class="sum">${pd?`<div><span>Total keseluruhan</span><span>${rp(c.tot)}</span></div><div><span>Sudah dibayar di awal (${t.pays.map(x=>PML[x.m]||x.m).join(' + ')})</span><span>−${rp(pd)}</span></div>`:''}<div class="g"><span>${pd?'TAGIHAN TAMBAHAN':'TOTAL'}</span><span>${rp(Math.max(0,due))}</span></div></div>
+ ${due>0?payBox('y',PMS.y):due<0?`<div class="bx" style="color:#b45309">Pembayaran di awal melebihi tagihan. Kembalikan ${rp(-due)} kepada pelanggan.</div>`:'<div class="bx">✔ Sudah lunas (dibayar di awal).</div>'}
+ <div class="row"><button onclick="printT()">Cetak Tagihan</button></div>
+ <div class="row"><button onclick="closeP()">Cancel</button><button class="p" onclick="pay()">Selesai</button></div>`;$('ov2').classList.add('show');setTimeout(()=>{const e=$('yby');if(e)e.focus()},60)}
+function pay(){const t=T(),c=calc(t),pd=paidOf(t),due=c.tot-pd;if(c.miss)return alert(MSG);const pays=(t.pays||[]).slice();
+ if(due>0){if(PMS.y=='Tunai'){const v=num($('yby').value);if(v&&v<due)return alert('Uang diterima kurang')}pays.push({ts:Date.now(),m:PMS.y,a:due})}else if(due<0)pays.push({ts:Date.now(),m:'Pengembalian',a:due});
  if(t.stage.length&&!confirm('Masih ada pesanan tambahan yang belum dikonfirmasi dan tidak ikut ditagih. Lanjutkan?'))return;
- S.hist.push({ts:Date.now(),meja:t.name,cust:t.cust,phone:t.phone,start:t.start,mins:t.mins,orders:t.orders,lines:c.lines,s:c.s,f:c.f,ds:c.ds,df:c.df,pS:c.pS,pF:c.pF,tax:c.tax,sub:c.sub,tot:c.tot,bayar:v||c.tot});
+ S.hist.push({ts:Date.now(),meja:t.name,cust:t.cust,phone:t.phone,start:t.start,mins:t.mins,orders:t.orders,lines:c.lines,s:c.s,f:c.f,ds:c.ds,df:c.df,sc:c.sc,pS:c.pS,pF:c.pF,tax:c.tax,sub:c.sub,tot:c.tot,pay:pays,bayar:c.tot});
  reset(t);save();closeP();closeM()}
-function cancelT(){ask('Batalkan sesi '+T().name+' tanpa pembayaran?',()=>{reset(T());save();closeM()})}
+function cancelT(){const t=T(),pd=paidOf(t);ask('Batalkan sesi '+t.name+' tanpa pembayaran?'+(pd?'\nSesi ini sudah dibayar '+rp(pd)+' di awal; kembalikan kepada pelanggan.':''),()=>{reset(T());save();closeM()})}
 /* ===== QR Code (byte, ECC L, versi 1-5; offline) ===== */
 function qr(text){const b=[...new TextEncoder().encode(text)],DC=[0,19,34,55,80,108],EC=[0,7,10,15,20,26];let v=1;while(v<=5&&b.length>DC[v]-2)v++;if(v>5)return null;
  const n=17+4*v,dc=DC[v],ec=EC[v],bits=[],pu=(x,l)=>{for(let i=l-1;i>=0;i--)bits.push((x>>i)&1)};
@@ -229,8 +242,8 @@ function receipt(t){const c=calc(t),cf=S.cfg,W=600,P=30,R=[],end=t.start+t.mins*
  if(t.orders.length){sp();tx('PESANAN',{b:1,z:18,h:28});t.orders.forEach(o=>kv(o.q+'× '+o.n,rp(o.p*o.q),{z:19,h:26}));kv('Total makanan/minuman',rp(c.f),{b:1,z:19,h:28})}
  if(t.stage.length)tx('(Ada pesanan tambahan yang belum dikonfirmasi)',{col:'#b45309',h:26,z:15});sp();
  if(c.ds+c.df)kv('Diskon '+c.dn+' ('+c.dp+'%)','−'+rp(c.ds+c.df),{z:19,h:26});kv('Subtotal',rp(c.sub),{z:19,h:26});
- if(cf.taxSOn)kv('Pajak sewa '+cf.taxS+'%',rp(c.pS),{z:19,h:26});if(cf.taxFOn)kv('Pajak F&B '+cf.taxF+'%',rp(c.pF),{z:19,h:26});
- kv('TOTAL',rp(c.tot),{b:1,z:30,h:52,top:1});
+ if(c.sc)kv('Service Charge '+cf.sc+'%',rp(c.sc),{z:19,h:26});if(cf.taxSOn)kv('PBJT '+cf.taxS+'%',rp(c.pS),{z:19,h:26});if(cf.taxFOn)kv('Pajak Makanan-Minuman '+cf.taxF+'%',rp(c.pF),{z:19,h:26});
+ kv('TOTAL',rp(c.tot),{b:1,z:30,h:52,top:1});const pd=paidOf(t);if(pd){kv('Sudah dibayar di awal','−'+rp(pd),{z:19,h:28});kv('TAGIHAN TAMBAHAN',rp(Math.max(0,c.tot-pd)),{b:1,z:24,h:42})}
  const ref='KB'+t.id+Math.floor(t.start/6e4).toString(36).toUpperCase(),qt=((cf.biz||'KASIR')+'|'+t.name+'|'+dstr(t.start)+' '+tstr(t.start)+'-'+tstr(end)+'|TOTAL '+rp(c.tot)+'|'+ref).normalize('NFD').replace(/[^\x20-\x7e]/g,'').slice(0,100);
  const q=qr(qt),QS=q?q.n+8:0,ms=q?Math.floor(220/QS):0,qh=QS*ms,H=P+R.reduce((a,r)=>a+r.h,0)+(q?qh+70:30)+P;
  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,H);g.textBaseline='middle';
@@ -246,8 +259,9 @@ function receipt(t){const c=calc(t),cf=S.cfg,W=600,P=30,R=[],end=t.start+t.mins*
   g.fillStyle='#555';g.font='15px system-ui,sans-serif';g.textAlign='center';g.fillText('Pindai QR untuk menyimpan ringkasan tagihan',W/2,y0+qh+26);g.fillText('Terima kasih atas kunjungan Anda',W/2,y0+qh+48)}
  return cv}
 let RJ=null;
-function printT(){const t=T(),cv=receipt(t);cv.toBlob(bl=>{RJ={bl,name:'tagihan-'+t.name.replace(/[^\w]+/g,'-')+'-'+dstr(t.start)+'.jpg'};const url=URL.createObjectURL(bl);
- $('sh2').innerHTML=`<h2>Tagihan ${esc(t.name)}</h2><img src="${url}" alt="Tagihan" style="width:100%;border-radius:8px;border:1px solid var(--bd)"><div class="sm" style="margin-top:6px">Simpan sebagai JPG, atau tekan lama gambar untuk menyimpan.</div><div class="row"><button onclick="closeP()">Tutup</button><button onclick="shareJ()">Bagikan</button><button class="p" onclick="saveJ()">Simpan JPG</button></div>`;$('ov2').classList.add('show')},'image/jpeg',.92)}
+function printT(){const t=T(),cv=receipt(t);cv.toBlob(bl=>{RJ={bl,name:'tagihan-'+t.name.replace(/[^\\w]+/g,'-')+'-'+dstr(t.start)+'.jpg'};const url=URL.createObjectURL(bl);
+ $('sh3').innerHTML=`<h2>Tagihan ${esc(t.name)}</h2><img src="${url}" alt="Tagihan" style="width:100%;border-radius:8px;border:1px solid var(--bd)"><div class="sm" style="margin-top:6px">Simpan sebagai JPG, atau tekan lama gambar untuk menyimpan.</div><div class="row"><button onclick="closeP3()">Tutup</button><button onclick="shareJ()">Bagikan</button><button class="p" onclick="saveJ()">Simpan JPG</button></div>`;$('ov3').classList.add('show')},'image/jpeg',.92)}
+const closeP3=()=>$('ov3').classList.remove('show');
 const closeP=()=>$('ov2').classList.remove('show');
 function saveJ(){const a=document.createElement('a');a.href=URL.createObjectURL(RJ.bl);a.download=RJ.name;a.click()}
 function shareJ(){try{const f=new File([RJ.bl],RJ.name,{type:'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:'Tagihan'}).catch(()=>{});else saveJ()}catch(e){saveJ()}}
@@ -276,6 +290,8 @@ $('sh').addEventListener('change',e=>{const el=e.target,p=el.dataset&&el.dataset
  const m=p.match(/^cfg\.promos\.(\d+)\./);if(m)pe(+m[1]);if(p=='cfg.orient')applyOrient(true);if(p.startsWith('tables.'))render()});
 async function applyOrient(msg){const m=S.cfg.orient;try{if(m=='auto')screen.orientation.unlock();else await screen.orientation.lock(m)}catch(e){if(msg&&m!='auto')alert('Pengunci orientasi hanya berfungsi bila aplikasi dibuka dari layar utama (mode layar penuh) atau sebagai APK. Di tab browser, layar mengikuti rotasi HP.')}}
 function askN(){if(!window.Notification)return alert('Browser ini tidak mendukung notifikasi');Notification.requestPermission().then(p=>alert('Izin notifikasi: '+p))}
+const addT=()=>{S.cfg.tarif.push({n:'Paket Baru',on:true,dari:'',sampai:'',wd:50000,we:60000});save();openSet()};
+const delT=i=>{S.cfg.tarif.splice(i,1);save();openSet()};
 const addP=()=>{S.cfg.promos.push({n:'Promo Siang',on:true,harga:75000,dur:2,min:2,dari:'13:00',sampai:'17:00'});save();openSet()};
 const delP=i=>{S.cfg.promos.splice(i,1);save();openSet()};
 const addD=()=>{S.cfg.disc.push({n:'Diskon Hari Raya',on:true,from:'',to:'',pct:10,scope:'all'});save();openSet()};
@@ -287,8 +303,10 @@ const clrH=()=>{if(confirm('Hapus SEMUA riwayat transaksi?')){S.hist=[];save();o
 function openSet(){cur=null;const c=S.cfg;
  const menu=[['mak','Makanan'],['min','Minuman'],['lain','Lain-lain']].map(([k,l])=>dt('s6'+k,l+' ('+S.menu.filter(m=>m.c==k).length+')',S.menu.map((m,i)=>m.c==k?`<div class="row">${I('menu.'+i+'.n',m.n)}${I('menu.'+i+'.p',m.p,'n','style="max-width:110px"')}<button class="n d" onclick="delM(${i})">✕</button></div>`:'').join('')+`<button onclick="addM('${k}')">+ Tambah ${l.toLowerCase()}</button>`)).join('');
  show(`<h2>Pengaturan</h2><div class="sm">Perubahan tersimpan otomatis.</div>
- ${dt('s1','Tarif sewa',CK('cfg.fixOn',c.fixOn,'Aktifkan tarif sewa tetap (normal)')+`<label>Tarif sewa tetap per jam (Rp)</label>${I('cfg.rate',c.rate,'n')}`+CK('cfg.rnd',c.rnd,'Bulatkan total sewa ke Rp1.000 (ratusan ≥500 naik, ≤499 turun)')+'<div class="sm">Prinsip: sewa dihitung menurut menit yang jatuh di tiap sesi waktu. Waktu di dalam rentang promo memakai tarif promo, selebihnya tarif tetap. Bila tarif tetap dimatikan, sewa hanya bisa dimulai pada jam yang tercakup promo. Untuk mengubah sesi, ubah jam promo.</div>')}
- ${dt('s2','Pajak',CK('cfg.taxSOn',c.taxSOn,'Kenakan pajak pada sewa meja')+`<label>Pajak sewa meja (%)</label>${I('cfg.taxS',c.taxS,'n')}`+CK('cfg.taxFOn',c.taxFOn,'Kenakan pajak pada makan-minum')+`<label>Pajak makan-minum (%)</label>${I('cfg.taxF',c.taxF,'n')}`+CK('cfg.pphOn',c.pphOn,'Tampilkan estimasi PPh Final di laporan')+`<label>PPh Final UMKM (% omzet, hanya estimasi laporan)</label>${I('cfg.pph',c.pph,'n')}<div class="sm">Pajak yang dipungut dari pelanggan = PBJT (pajak daerah), tarif ditetapkan Perda setempat, maksimal 10% menurut UU HKPD. Cocokkan dengan Perda daerah Anda.</div>`)}
+ ${dt('s1','Tarif sewa normal ('+c.tarif.length+' paket)','<div class="sm">Tarif per jam menurut jam dan hari. Weekday = Senin–Jumat, Weekend = Sabtu–Minggu. Jam dibaca persis (13.00–18.00 berarti sampai pukul 18.00). Waktu di luar paket yang aktif tidak bisa disewa, kecuali ada promo yang berlaku. Bila ada promo yang lebih murah, promo diutamakan. Sewa dihitung menurut menit yang jatuh di tiap paket.</div>'+c.tarif.map((x,i)=>`<div class="bx"><div class="row">${I('cfg.tarif.'+i+'.n',x.n,'s','placeholder="Nama paket"')}${CK('cfg.tarif.'+i+'.on',x.on,'Aktif')}<button class="n d" onclick="delT(${i})">✕</button></div>
+ <div class="row"><div><label>Berlaku dari jam</label>${I('cfg.tarif.'+i+'.dari',x.dari||'','s','type="time"')}</div><div><label>Sampai jam</label>${I('cfg.tarif.'+i+'.sampai',x.sampai||'','s','type="time"')}</div></div>
+ <div class="row"><div><label>Weekday (Senin–Jumat), Rp/jam</label>${I('cfg.tarif.'+i+'.wd',x.wd,'n')}</div><div><label>Weekend (Sabtu–Minggu), Rp/jam</label>${I('cfg.tarif.'+i+'.we',x.we,'n')}</div></div></div>`).join('')+'<button onclick="addT()">+ Tambah paket</button>'+CK('cfg.rnd',c.rnd,'Bulatkan total sewa ke Rp1.000 (ratusan ≥500 naik, ≤499 turun)'))}
+ ${dt('s2','Pajak & service charge',CK('cfg.taxSOn',c.taxSOn,'PBJT (Pajak Barang dan Jasa Tertentu)')+`<label>Tarif PBJT atas sewa meja (%)</label>${I('cfg.taxS',c.taxS,'n')}`+CK('cfg.taxFOn',c.taxFOn,'Pajak Makanan-Minuman')+`<label>Tarif Pajak Makanan-Minuman (%)</label>${I('cfg.taxF',c.taxF,'n')}`+CK('cfg.scOn',c.scOn,'Service Charge')+`<label>Service Charge (%)</label>${I('cfg.sc',c.sc,'n')}<label>Service Charge dikenakan pada</label>${SEL('cfg.scScope',c.scScope,[['all','Sewa meja + makanan-minuman'],['sewa','Sewa meja saja'],['fnb','Makanan-minuman saja']])}`+CK('cfg.scBase',c.scBase!==false,'Service Charge ikut dihitung dalam dasar pajak (PBJT/Pajak Makanan-Minuman)')+CK('cfg.pphOn',c.pphOn,'Tampilkan estimasi PPh Final di laporan')+`<label>PPh Final UMKM (% omzet, hanya estimasi laporan)</label>${I('cfg.pph',c.pph,'n')}<div class="sm">Tarif PBJT ditetapkan Perda setempat, maksimal 10% menurut UU HKPD. Cocokkan dengan Perda dan Bapenda daerah Anda, termasuk apakah service charge masuk dasar pajak.</div>`)}
  ${dt('s3','Pengingat & alarm waktu sewa',CK('cfg.remOn',c.remOn,'Ingatkan sebelum waktu sewa habis')+`<label>Menit sebelum habis</label>${I('cfg.remMin',c.remMin,'n','min="1"')}`+CK('cfg.endOn',c.endOn,'Alarm saat waktu habis')+CK('cfg.sndOn',c.sndOn,'Bunyikan suara alarm')+CK('cfg.vibOn',c.vibOn,'Getarkan perangkat')+CK('cfg.wake',c.wake,'Jaga layar tetap menyala saat ada meja aktif')+`<label>Volume alarm</label>${I('cfg.vol',c.vol,'n','type="range" min="10" max="100"')}<div class="row"><button onclick="unlock();beep(true)">Tes alarm</button><button onclick="askN()">Izinkan notifikasi</button></div><div class="sm">Alarm terjamin berbunyi hanya selama aplikasi terbuka dan layar menyala. Ketuk layar sekali setelah membuka aplikasi agar suara diizinkan.</div>`)}
  ${dt('s4','Promo harga sewa ('+c.promos.length+')','<div class="sm">Harga promo berupa paket (mis. Rp75.000 untuk 2 jam) dan dihitung rata per jam. Aktif/nonaktif diatur di tiap promo. Jam promo dibaca persis: 13.00–17.00 berarti sampai pukul 17.00. Bila beberapa promo cocok, dipakai tarif per jam terendah. Kosongkan jam = berlaku sepanjang hari.</div>'+c.promos.map((p,i)=>`<div class="bx"><div class="row">${I('cfg.promos.'+i+'.n',p.n,'s','placeholder="Nama promo"')}${CK('cfg.promos.'+i+'.on',p.on,'Aktif')}<button class="n d" onclick="delP(${i})">✕</button></div>
  <div class="row"><div><label>Harga paket (Rp)</label>${I('cfg.promos.'+i+'.harga',p.harga,'n')}</div><div><label>Untuk berapa jam</label>${I('cfg.promos.'+i+'.dur',p.dur,'n','min="1"')}</div></div><div class="sm" id="pe${i}">${peTxt(p)}</div>
@@ -308,10 +326,10 @@ const net=h=>h.s+h.f-(h.ds||0)-(h.df||0);
 function repD(v){RP.v=v.length==7?v+'-01':v;openRep()}
 function rangeR(){const d=new Date(RP.v+'T00:00:00'),y=d.getFullYear(),m=d.getMonth(),dd=d.getDate();
  if(RP.tab=='d')return[d,new Date(y,m,dd+1)];if(RP.tab=='w'){const k=(d.getDay()+6)%7;return[new Date(y,m,dd-k),new Date(y,m,dd-k+7)]}return[new Date(y,m,1),new Date(y,m+1,1)]}
-const sumR=a=>a.reduce((x,h)=>({n:x.n+1,s:x.s+h.s,f:x.f+h.f,d:x.d+(h.ds||0)+(h.df||0),tax:x.tax+h.tax,tot:x.tot+h.tot}),{n:0,s:0,f:0,d:0,tax:0,tot:0});
+const sumR=a=>a.reduce((x,h)=>({n:x.n+1,s:x.s+h.s,f:x.f+h.f,d:x.d+(h.ds||0)+(h.df||0),sc:x.sc+(h.sc||0),tax:x.tax+h.tax,tot:x.tot+h.tot}),{n:0,s:0,f:0,d:0,sc:0,tax:0,tot:0});
 function custRep(arr,all){const m={};arr.forEach(h=>{const k=(h.phone||h.cust||'').toLowerCase().trim();if(!k)return;const o=m[k]||(m[k]={n:h.cust||h.phone,ph:'',v:0,tot:0,menu:{},hr:{},dur:0,pk:0,pv:0});
  o.v++;o.tot+=h.tot;if(h.cust)o.n=h.cust;if(h.phone)o.ph=h.phone;(h.orders||[]).forEach(x=>o.menu[x.n]=(o.menu[x.n]||0)+x.q);const hr=new Date(h.start).getHours();o.hr[hr]=(o.hr[hr]||0)+1;o.dur+=hmins(h);
- if(h.lines){o.pk++;if(h.lines.some(l=>l.n))o.pv++}});const v=Object.values(m).sort((a,b)=>b.v-a.v||b.tot-a.tot);return all?v:v.slice(0,5)}
+ if(h.lines){o.pk++;if(h.lines.some(l=>l.pm!==undefined?l.pm:!!l.n))o.pv++}});const v=Object.values(m).sort((a,b)=>b.v-a.v||b.tot-a.tot);return all?v:v.slice(0,5)}
 function openRep(tab){cur=null;if(tab)RP.tab=tab;const tb=RP.tab,mo=tb=='m'||tb=='c',[a,b]=rangeR(),arr=S.hist.filter(h=>h.ts>=a&&h.ts<b),L=d=>d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
  let body='';
  if(tb=='c'){const top=custRep(arr);body=top.length?top.map((o,i)=>{const mn=Object.entries(o.menu).sort((x,y)=>y[1]-x[1]).slice(0,3).map(x=>x[0]+' ×'+x[1]).join(', ')||'—',h=Object.entries(o.hr).sort((x,y)=>y[1]-x[1])[0];
@@ -319,7 +337,7 @@ function openRep(tab){cur=null;if(tab)RP.tab=tab;const tb=RP.tab,mo=tb=='m'||tb=
   <div class="sm">Menu sering dipesan: ${esc(mn)}</div><div class="sm">Biasa mulai main sekitar ${p2(h[0])}.00 (${h[1]} dari ${o.v} kunjungan) · rata-rata durasi ${fmtD(Math.round(o.dur/o.v))}</div>
   ${o.pk&&o.pv/o.pk>=.5?`<div style="color:var(--pr);font-weight:600;font-size:13px">💡 Sering menyewa di jam promo (${o.pv} dari ${o.pk} kunjungan)</div>`:''}</div>`}).join(''):'<div class="sm">Belum ada data pelanggan pada bulan ini. Isi nama/No HP saat mulai main.</div>'}
  else{const x=sumR(arr),days={};arr.forEach(h=>{const k=dstr(h.ts);(days[k]=days[k]||[]).push(h)});
-  body=`<div class="sum"><div><span>Jumlah transaksi</span><span>${x.n}</span></div><div><span>Sewa meja</span><span>${rp(x.s)}</span></div><div><span>Makanan/minuman</span><span>${rp(x.f)}</span></div><div><span>Diskon</span><span>−${rp(x.d)}</span></div><div><span>Omzet bersih sebelum pajak</span><span>${rp(x.s+x.f-x.d)}</span></div><div><span>PBJT dipungut (setor ke Pemda)</span><span>${rp(x.tax)}</span></div><div class="g"><span>Total diterima</span><span>${rp(x.tot)}</span></div>${S.cfg.pphOn?`<div><span>Estimasi PPh Final ${S.cfg.pph}% × omzet</span><span>${rp((x.s+x.f-x.d)*S.cfg.pph/100)}</span></div>`:''}</div>
+  body=`<div class="sum"><div><span>Jumlah transaksi</span><span>${x.n}</span></div><div><span>Sewa meja</span><span>${rp(x.s)}</span></div><div><span>Makanan/minuman</span><span>${rp(x.f)}</span></div><div><span>Diskon</span><span>−${rp(x.d)}</span></div><div><span>Omzet bersih sebelum pajak</span><span>${rp(x.s+x.f-x.d)}</span></div><div><span>Pajak dipungut (PBJT, setor ke Pemda)</span><span>${rp(x.tax)}</span></div><div><span>Service Charge</span><span>${rp(x.sc)}</span></div><div class="g"><span>Total diterima</span><span>${rp(x.tot)}</span></div>${S.cfg.pphOn?`<div><span>Estimasi PPh Final ${S.cfg.pph}% × omzet</span><span>${rp((x.s+x.f-x.d)*S.cfg.pph/100)}</span></div>`:''}</div>
   <div class="sm">Omzet untuk dasar PPh Final dihitung sebelum PBJT. Estimasi ini bukan pengganti perhitungan resmi/konsultasi pajak.</div>`
   +(tb=='d'?`<h3>Transaksi</h3>`+(arr.slice().reverse().map(h=>`<div class="it"><span>${esc(h.meja)} · ${hm(h.ts)}${h.cust?' · '+esc(h.cust):''}</span><b>${rp(h.tot)}</b></div>`).join('')||'<div class="sm">Belum ada</div>')
    :`<h3>Per hari</h3>`+(Object.keys(days).sort().map(k=>{const y=sumR(days[k]);return`<div class="it"><span>${L(new Date(k+'T00:00:00'))} <span class="sm">(${y.n} transaksi)</span></span><b>${rp(y.tot)}</b></div>`}).join('')||'<div class="sm">Belum ada</div>'))}
@@ -362,7 +380,7 @@ function repPDF(){const tb=RP.tab,[a,b]=rangeR(),arr=S.hist.filter(h=>h.ts>=a&&h
   LN();P('SELURUH PELANGGAN BULAN INI',{b:1,z:10});R([{t:'Nama',x:M},{t:'No HP',x:230},{t:'Kunjungan',r:430},{t:'Total',r:E}],{b:1});
   all.forEach(o=>R([{t:o.n.slice(0,30),x:M},{t:o.ph||'-',x:230},{t:String(o.v),r:430},{t:rp(o.tot),r:E}]))}
  else{const x=sumR(arr);P('RINGKASAN',{b:1,z:10});
-  [['Jumlah transaksi',x.n],['Sewa meja',rp(x.s)],['Makanan/minuman',rp(x.f)],['Diskon',x.d?'-'+rp(x.d):rp(0)],['Omzet bersih sebelum pajak',rp(x.s+x.f-x.d)],['PBJT dipungut (setor ke Pemda)',rp(x.tax)]].forEach(r=>R([{t:r[0],x:M},{t:String(r[1]),r:E}]));
+  [['Jumlah transaksi',x.n],['Sewa meja',rp(x.s)],['Makanan/minuman',rp(x.f)],['Diskon',x.d?'-'+rp(x.d):rp(0)],['Omzet bersih sebelum pajak',rp(x.s+x.f-x.d)],['Pajak dipungut (PBJT, setor ke Pemda)',rp(x.tax)],['Service Charge',rp(x.sc)]].forEach(r=>R([{t:r[0],x:M},{t:String(r[1]),r:E}]));
   R([{t:'Total diterima',x:M},{t:rp(x.tot),r:E}],{b:1});if(S.cfg.pphOn)R([{t:'Estimasi PPh Final '+S.cfg.pph+'% x omzet',x:M},{t:rp((x.s+x.f-x.d)*S.cfg.pph/100),r:E}]);SP(4);LN();
   if(tb!='d'){const days={};arr.forEach(h=>{const k=dstr(h.ts);(days[k]=days[k]||[]).push(h)});P('PER HARI',{b:1,z:10});
    Object.keys(days).sort().forEach(k=>{const y=sumR(days[k]);R([{t:LD(new Date(k+'T00:00:00')),x:M},{t:y.n+' transaksi',x:230},{t:rp(y.tot),r:E}])});if(!arr.length)P('Belum ada data.');SP(4);LN()}
@@ -370,7 +388,8 @@ function repPDF(){const tb=RP.tab,[a,b]=rangeR(),arr=S.hist.filter(h=>h.ts>=a&&h
   arr.slice().sort((a,b)=>a.ts-b.ts).forEach(h=>{const d=new Date(h.ts);R([{t:p2(d.getDate())+'/'+p2(d.getMonth()+1)+' '+hm(h.ts),x:M},{t:h.meja,x:100},{t:(h.cust||'-').slice(0,22),x:142},{t:rp(h.s),r:320},{t:rp(h.f),r:375},{t:rp((h.ds||0)+(h.df||0)),r:430},{t:rp(h.tax),r:485},{t:rp(h.tot),r:E}],{z:8.5});
    const ss=(h.lines||[]).map(l=>(l.n||'Normal')+(l.from?' '+hm(l.from)+'-'+hm(l.to):'')+' ('+fmtD(l.m!=null?l.m:(l.h||0)*60)+')');
    if(ss.length||h.mins!=null||h.hrs)P('Sewa '+fmtD(hmins(h))+(ss.length?': '+ss.join('; '):''),{z:7.5,col:G,x:142});
-   if((h.orders||[]).length)P('Pesanan: '+h.orders.map(o=>o.q+'x '+o.n).join(', '),{z:7.5,col:G,x:142})});
+   if((h.orders||[]).length)P('Pesanan: '+h.orders.map(o=>o.q+'x '+o.n).join(', '),{z:7.5,col:G,x:142});
+   if((h.pay||[]).length)P('Pembayaran: '+h.pay.filter(p=>p.a>0).map(p=>(PML[p.m]||p.m)+' '+rp(p.a)).join(' + '),{z:7.5,col:G,x:142})});
   if(!arr.length)P('Belum ada transaksi.')}
  return{bytes:pdfBuild(I),name:'Laporan-'+TBN[tb]+'-'+per.replace(/[^\w]+/g,'-')+'.pdf'}}
 async function saveFile(u8,name){const C=window.Capacitor,FS=C&&C.Plugins&&C.Plugins.Filesystem;
@@ -386,7 +405,7 @@ function clrR(){const tb=RP.tab,[a,b]=rangeR(),arr=S.hist.filter(h=>h.ts>=a&&h.t
   if(!confirm('CLEAR DATA PELANGGAN\n\nNama dan No HP pada '+w.length+' transaksi ('+per+') akan dihapus. Omzet dan transaksi tetap tersimpan.\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?'))return;w.forEach(h=>{h.cust='';h.phone=''})}
  else{if(!confirm('CLEAR DATA '+TBN[tb].toUpperCase()+'\n\n'+arr.length+' transaksi ('+per+') akan dihapus permanen.\nDisarankan menekan Save Data (PDF) terlebih dahulu.\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?'))return;S.hist=S.hist.filter(h=>!(h.ts>=a&&h.ts<b))}
  save();openRep();toast('Data dibersihkan',2500)}
-function exp(){const r=[['Waktu','Meja','Pelanggan','No HP','Menit','Sewa','FnB','Diskon','PBJT','Total']].concat(S.hist.map(h=>[new Date(h.ts).toLocaleString('id-ID'),h.meja,h.cust,h.phone||'',hmins(h),h.s,h.f,(h.ds||0)+(h.df||0),h.tax,h.tot]));
+function exp(){const r=[['Waktu','Meja','Pelanggan','No HP','Menit','Sewa','FnB','Diskon','Service Charge','Pajak','Total','Metode']].concat(S.hist.map(h=>[new Date(h.ts).toLocaleString('id-ID'),h.meja,h.cust,h.phone||'',hmins(h),h.s,h.f,(h.ds||0)+(h.df||0),h.sc||0,h.tax,h.tot,(h.pay||[]).filter(p=>p.a>0).map(p=>PML[p.m]||p.m).join(' + ')]));
  const bl=new Blob([r.map(x=>x.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='riwayat-kasir.csv';a.click()}
 render();applyOrient();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
